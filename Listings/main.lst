@@ -1,0 +1,280 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ; main.s
+    2 00000000         ; Runs on any Cortex M processor
+    3 00000000         ; A very simple first project implementing a random numb
+                       er generator
+    4 00000000         ; Daniel Valvano
+    5 00000000         ; May 4, 2012
+    6 00000000         
+    7 00000000         ;  This example accompanies the book
+    8 00000000         ;  "Embedded Systems: Introduction to Arm Cortex M Micro
+                       controllers",
+    9 00000000         ;  ISBN: 978-1469998749, Jonathan Valvano, copyright (c)
+                        2012
+   10 00000000         ;  Section 3.3.10, Program 3.12
+   11 00000000         ;
+   12 00000000         ;Copyright 2012 by Jonathan W. Valvano, valvano@mail.ute
+                       xas.edu
+   13 00000000         ;   You may use, edit, run or distribute this file
+   14 00000000         ;   as long as the above copyright notice remains
+   15 00000000         ;THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHET
+                       HER EXPRESS, IMPLIED
+   16 00000000         ;OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WA
+                       RRANTIES OF
+   17 00000000         ;MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE AP
+                       PLY TO THIS SOFTWARE.
+   18 00000000         ;VALVANO SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR 
+                       SPECIAL, INCIDENTAL,
+   19 00000000         ;OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
+   20 00000000         ;For more information about my classes, my research, and
+                        my books, see
+   21 00000000         ;http://users.ece.utexas.edu/~valvano/
+   22 00000000         
+   23 00000000         
+   24 00000000                 THUMB
+   25 00000000         ;AREA    DATA, ALIGN=2   
+   26 00000000                 AREA             |.text|, CODE, READONLY, ALIGN=
+2
+   27 00000000                 EXPORT           Start
+   28 00000000                 ALIGN
+   29 00000000         ;unlock 0x4C4F434B
+   30 00000000         
+   31 00000000         ;PF4 is SW1
+   32 00000000         ;PF0 is SW2
+   33 00000000         ;PF1 is RGB Red
+   34 00000000         ;Enable Clock RCGCGPIO p338
+   35 00000000         ;Set direction 1 is out 0 is in. GPIODIR
+   36 00000000         ;DEN 
+   37 00000000         ; 0x3FC
+   38 00000000         
+   39 00000000         ;GPIO Port B (APB): 0x4000.5000
+   40 00000000         ;GPIO Port E (APB): 0x4002.4000
+   41 00000000         Start
+   42 00000000 F24E 1008 
+              F2C4 000F        mov32            R0, #0x400FE108 
+                                                            ; Enable GPIO Clock
+                                                            
+   43 00000008 F04F 0132       mov              R1, #0x32
+   44 0000000C 6001            str              R1, [R0]
+   45 0000000E         
+   46 0000000E F245 0000 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+              F2C4 0000        mov32            R0, #0x40005000 ;Port B
+   47 00000016         ;mov R1, #0x4C4F434B
+   48 00000016 F04F 0100       mov              R1, #0x0
+   49 0000001A F8C0 1420       str              R1, [R0, #0x420] ;turn off alt 
+                                                            function, may need 
+                                                            unlock
+   50 0000001E F04F 01FF       mov              R1,#0xFF
+   51 00000022 F8C0 1400       str              R1,[R0,#0x400] 
+                                                            ;Port B output 0-7
+   52 00000026 F04F 01FF       mov              R1,#0xFF
+   53 0000002A F8C0 151C       str              R1,[R0,#0x51C] 
+                                                            ;Port B pin 0-7 on
+   54 0000002E         ;mov R1, #0x09    turn on led 0 and 3
+   55 0000002E         ;str R1, [R0, #0x3FC]
+   56 0000002E         
+   57 0000002E F244 0200 
+              F2C4 0202        mov32            R2, #0x40024000 ;Port E
+   58 00000036 F04F 0100       mov              R1, #0x0
+   59 0000003A F8C2 1420       str              R1, [R2, #0x420] ;turn off alt 
+                                                            function, may need 
+                                                            unlock
+   60 0000003E F04F 0103       mov              R1,#0x03
+   61 00000042 F8C2 1400       str              R1,[R2,#0x400] ;Port E output 0
+                                                            -1, input 2
+   62 00000046 F04F 0104       mov              R1, #0x04
+   63 0000004A F8C0 1510       str              R1, [R0,#0x510] ;pull up
+   64 0000004E F04F 0107       mov              R1,#0x07
+   65 00000052 F8C2 151C       str              R1,[R2,#0x51C] 
+                                                            ;Port E pin 0-2 on
+   66 00000056         
+   67 00000056         ;mov R1, #0x03    turn on led 8 and 9
+   68 00000056         ;str R1, [R2, #0x3FC]
+   69 00000056         
+   70 00000056 F245 0700 
+              F2C4 0702        mov32            R7, #0x40025000 ;Port F
+   71 0000005E F244 314B 
+              F6C4 414F        mov32            R1, #0x4C4F434B ;Unlock code
+   72 00000066 F8C7 1520       str              R1, [R7,#0x520] ;Unlocks F
+   73 0000006A F04F 0111       mov              R1, #0x11
+   74 0000006E F8C7 1524       str              R1, [R7,#0x524] ;GPIOCR
+   75 00000072 F04F 0100       mov              R1, #0x0
+   76 00000076 F8C7 1420       str              R1, [R7, #0x420] ;turn off alt 
+                                                            function
+   77 0000007A F04F 0111       mov              R1, #0x11
+   78 0000007E F8C7 1510       str              R1, [R7,#0x510] ;pull up
+   79 00000082 F04F 0100       mov              R1, #0x00
+   80 00000086 F8C7 1400       str              R1, [R7, #0x400] 
+                                                            ;Port F input 1 & 4
+                                                            
+   81 0000008A F04F 0111       mov              R1, #0x11
+   82 0000008E F8C7 151C       str              R1, [R7,#0x51C] 
+                                                            ;Turn on pin 0,4
+   83 00000092         
+   84 00000092         
+   85 00000092         
+   86 00000092         ;TODO port F ///////////////////////////////////////////
+                       ///////
+   87 00000092         
+   88 00000092 F240 0300 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+              F2C0 0300        mov32            R3, #0x000  ;counter 
+   89 0000009A         
+   90 0000009A         ;pmov R4, #0x00 ;counter carry
+   91 0000009A         Loop
+   92 0000009A F64F 75FF 
+              F2C0 0502        mov32            R5, #0x2ffff ;delay counter
+   93 000000A2 EA6F 0303       mvn              R3, R3
+   94 000000A6         
+   95 000000A6 F8C0 33FC       str              R3, [R0, #0x3FC]
+   96 000000AA EA4F 2413       lsr              R4, R3, #8
+   97 000000AE F8C2 43FC       str              R4, [R2, #0x3FC]
+   98 000000B2         
+   99 000000B2 EA6F 0303       mvn              R3, R3
+  100 000000B6         
+  101 000000B6         delay
+  102 000000B6 F8D7 13FC       ldr              R1, [R7, #0x3FC]
+  103 000000BA EA6F 0101       mvn              R1, R1
+  104 000000BE F001 0110       AND              R1, #0x10
+  105 000000C2 2910            cmp              R1, #0x10
+  106 000000C4 D014            beq              stop
+  107 000000C6         start
+  108 000000C6 F8D2 13FC       ldr              R1, [R2, #0x3FC]
+  109 000000CA EA6F 0101       mvn              R1, R1
+  110 000000CE F001 0104       and              R1, #0x04
+  111 000000D2 2904            cmp              R1, #0x04
+  112 000000D4 D01B            beq              reset
+  113 000000D6         
+  114 000000D6 F1A5 0501       sub              R5, #0x1
+  115 000000DA 2D00            cmp              R5, #0x0
+  116 000000DC DCEB            bgt              delay
+  117 000000DE         
+  118 000000DE         
+  119 000000DE F103 0301       add              R3, #0x1
+  120 000000E2 F240 36FF 
+              F2C0 0600        mov32            R6, #0x3FF
+  121 000000EA 42B3            cmp              R3, R6
+  122 000000EC D00F            beq              reset
+  123 000000EE E7D4            b                Loop
+  124 000000F0         
+  125 000000F0         stop
+  126 000000F0 F8D2 13FC       ldr              R1, [R2, #0x3FC]
+  127 000000F4 F001 0104       and              R1, #0x04
+  128 000000F8 2904            cmp              R1, #0x04
+  129 000000FA D008            beq              reset
+  130 000000FC F8D7 13FC       ldr              R1, [R7, #0x3FC]
+  131 00000100 EA6F 0101       mvn              R1, R1
+  132 00000104 F001 0101       AND              R1, #0x01
+  133 00000108 2901            cmp              R1, #0x01
+  134 0000010A D0DC            beq              start
+  135 0000010C E7F0            b                stop
+  136 0000010E         
+  137 0000010E         
+  138 0000010E         reset
+  139 0000010E F04F 0300       mov              R3, #0x000
+  140 00000112 E7C2            b                Loop
+  141 00000114         
+  142 00000114                 ALIGN
+  143 00000114                 END
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+ork --depend=.\objects\main.d -o.\objects\main.o -I.\RTE\_Target_1 -IC:\Keil_v5
+\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\LM3S_DFP\1.1
+.0\Device\Include --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SE
+TA 524" --predefine="_RTE_ SETA 1" --predefine="LM3S1968 SETA 1" --list=.\listi
+ngs\main.lst main.asm
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 26 in file main.asm
+   Uses
+      None
+Comment: .text unused
+Loop 0000009A
+
+Symbol: Loop
+   Definitions
+      At line 91 in file main.asm
+   Uses
+      At line 123 in file main.asm
+      At line 140 in file main.asm
+
+Start 00000000
+
+Symbol: Start
+   Definitions
+      At line 41 in file main.asm
+   Uses
+      At line 27 in file main.asm
+Comment: Start used once
+delay 000000B6
+
+Symbol: delay
+   Definitions
+      At line 101 in file main.asm
+   Uses
+      At line 116 in file main.asm
+Comment: delay used once
+reset 0000010E
+
+Symbol: reset
+   Definitions
+      At line 138 in file main.asm
+   Uses
+      At line 112 in file main.asm
+      At line 122 in file main.asm
+      At line 129 in file main.asm
+
+start 000000C6
+
+Symbol: start
+   Definitions
+      At line 107 in file main.asm
+   Uses
+      At line 134 in file main.asm
+Comment: start used once
+stop 000000F0
+
+Symbol: stop
+   Definitions
+      At line 125 in file main.asm
+   Uses
+      At line 106 in file main.asm
+      At line 135 in file main.asm
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+
+7 symbols
+341 symbols in table
