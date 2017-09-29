@@ -154,7 +154,7 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>0</BreakIfRCount>
-          <Filename>.\main.asm</Filename>
+          <Filename>C:\Users\aaron\Documents\MicroControllers\Lab03\ARMSimulator\main.asm</Filename>
           <ExecCommand></ExecCommand>
           <Expression></Expression>
         </Bp>
@@ -170,7 +170,7 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>0</BreakIfRCount>
-          <Filename>.\main.asm</Filename>
+          <Filename>C:\Users\aaron\Documents\MicroControllers\Lab03\ARMSimulator\main.asm</Filename>
           <ExecCommand></ExecCommand>
           <Expression></Expression>
         </Bp>
@@ -243,7 +243,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\main.asm</PathWithFileName>
+      <PathWithFileName>..\main.asm</PathWithFileName>
       <FilenameWithoutPath>main.asm</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
