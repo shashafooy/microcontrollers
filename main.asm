@@ -87,49 +87,143 @@ Start
 	
 	
 	mov R9, #0x0 ;draw counter
+	mov R11, #0x20 ;player 1 position
+	mov R12, #0x10 ;player 2 position
 	mov r2, #0 ;ready states of p1[0] and p2[1]
 	mov32 r0, port_B
 	mov r1, #0x30
+	mvn r1, r1
 	str r1, [r0, #0x3fc] ;turns on center leds 
-
-standby
 	mov32 r0, port_E
-	ldr R1, [R0, #0x30]
+	mov r1, #0x3
+	str r1, [r0, #0xc]
+
+STANDBY
+	mov32 r0, port_E
+	ldr R1, [R0, #0x30] ;get current buttons pressed
 	eor r1, #0xc
 	orr r2, r1 ;refresh ready states of players
 	cmp r2, #0x0c ;p1 and p2 are ready, might be #0xc
-	beq Loop ;start game
+	beq START_GAME ;start game
 	
 	mov32 r0, port_B
 	ldr r1, [r0, #0xc0] ;load current values of led 4,5
 	mvn r1, r1
+	mvn r3, r2
+	and r1, r3, lsl #2
 	str r1, [r0, #0xc0] ;set led 4,5 to inverted value
+	
+
+	mov32 r3, #0x2625a00 ; 0.5 Seconds
+	bl TIMER
+;	mov32 r0, sysTick
+;	mov r1, #4
+;	str r1, [r0, #0x10] ;stop sysTick, use system clock
+;	mov32 r1, #0x7a1200 ;7a1200
+;	str r1, [r0, #0x14] ;set count value
+;	ldr r1, [r0, #0x10]
+;	orr r1, #0x1
+;	str r1, [r0, #0x10] ;enable clock
+;	mov r3, #0x1
+	mov32 r0, sysTick
+BLINK_DELAY
+	ldr r1, [r0, #0x10]
+	cmp r3, r1, lsr #16
+	bne BLINK_DELAY
+	b STANDBY
+	
+TIMER
+	push {r0}
+	push {r1}
 	
 	mov32 r0, sysTick
 	mov r1, #4
 	str r1, [r0, #0x10] ;stop sysTick, use system clock
-	mov32 r1, #0x7a1200 ;7a1200
-	str r1, [r0, #0x14] ;set count value
+	;mov32 r1, #0x7a1200 ;7a1200
+	str r3, [r0, #0x14] ;set reset value to r3
+	str r3, [r0, #0x18] ;set current value to r3
 	ldr r1, [r0, #0x10]
 	orr r1, #0x1
 	str r1, [r0, #0x10] ;enable clock
 	mov r3, #0x1
-wait1
-	ldr r1, [r0, #0x10]
-	cmp r3, r1, lsr #16
-	bne wait1
-	b standby
-;******start main loop******	
+	
+	pop {r1}
+	pop {r0}
+	bx lr
+
+UPDATE_LED
+	push{r0}
+	push{r1}
+	push{r3}
+	
+	orr r3, r11, r12 ;which leds turn on
+	mvn r3, r3
+	mov32 r0, port_B
+	str r3, [r0, #0x3fc]
+	lsr r3, #8
+	mov32 r0, port_E
+	str r3, [r0, #0xc]
+	
+	pop{r3}
+	pop{r1}
+	pop{r0}
+	bx lr
+
+RND12
+	mov32 r3, #0x4c4b400 ;*****TODO make random 1-2, currently 1 sec**********
+	bx lr
+	
+START_GAME
+	mov32 r0, port_B
+	mov r1, #0xcf ; cf=1100 1111, turn on center led
+	str r1, [r0, #0xc0] ;load current values of led 4,5
+	
 Loop
-	mov32 R5, #0x6cd06 ;delay counter
-	mvn R3, R3
+	bl RND12 ;get random value 1-2 and store in r3
+	bl TIMER ;use value of r3 from rnd12
+WHILE2
+	mov32 r0, port_E
+	ldr R1, [R0, #0x30] ;get current buttons pressed
+	eor r1, #0xc
+	cmp r1, #0x0000
+	bne Loop ;player pressed button early
 	
-	str R3, [R0, #0x3FC]
-	lsr R4, R3, #8
-	str R4, [R2, #0x3FC]
+	mov32 r0, sysTick
+	ldr r1, [r0, #0x10] 
+	lsr r1, #16
+	cmp r3, r1 ;is timer done
+	bne WHILE2
 	
-	mvn R3, R3
+	lsl r11, #1 ;move p1 left 1
+	lsr r12, #1 ;move p2 right 1
+	bl UPDATE_LED
 	
+GET_FIRST_TURN	
+	mov32 r0, port_E
+	ldr R1, [R0, #0x30] ;get current buttons pressed
+	eor r1, #0xc
+	cmp r1, #0x8
+	bne CHECK_P2
+	bl PLAYER1_FIRST
+CHECK_P2
+	cmp r1, #0x4
+	bne GET_FIRST_TURN
+	bl PLAYER2_FIRST
+	
+	
+	
+	
+	
+	
+PLAYER1_FIRST
+	push{r0}
+	push{r1}
+	
+	bx lr
+
+PLAYER2_FIRST
+	bx lr
+;********************OLD CODE*********************	
 delay
 	ldr R1, [R7, #0x3FC]
 	mvn R1, R1
