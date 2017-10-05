@@ -1,4 +1,4 @@
-﻿psuedo code sumo
+psuedo code sumo
 
 
 init
@@ -38,13 +38,13 @@ MainLoop
                 playerturn =p1
                 timer(2^(-min(draws,4))*(320 - 80*p1.sn))
         end if
-        while (!timer.done)
+        while3 (!timer.done)
                 if(p1.pressed && playerturn == p1)
                         move p1 right
                         draw++
                         goto MainLoop
                 end if
-                if(p2.pressed && playerturn == p2)
+                if(p2.pressed && playerturn == p2)  //skip p1
                         move p2 left
                         draw++
                         goto Main loop
@@ -54,7 +54,7 @@ MainLoop
         if(playerturn == p1) ;p1 missed their turn
                 move p2 left
         end if
-        if(playerturn == p2) ;p2 missed their turn
+        else ;p2 missed their turn
                 move p1 right
         end if
         if(p1 on left edge || p2 on right edge) goto gameOver
