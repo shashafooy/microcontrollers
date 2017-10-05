@@ -1,25 +1,3 @@
-; main.s
-; Runs on any Cortex M processor
-; A very simple first project implementing a random number generator
-; Daniel Valvano
-; May 4, 2012
-
-;  This example accompanies the book
-;  "Embedded Systems: Introduction to Arm Cortex M Microcontrollers",
-;  ISBN: 978-1469998749, Jonathan Valvano, copyright (c) 2012
-;  Section 3.3.10, Program 3.12
-;
-;Copyright 2012 by Jonathan W. Valvano, valvano@mail.utexas.edu
-;   You may use, edit, run or distribute this file
-;   as long as the above copyright notice remains
-;THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
-;OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
-;MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
-;VALVANO SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
-;OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-;For more information about my classes, my research, and my books, see
-;http://users.ece.utexas.edu/~valvano/
-
 
        THUMB
        ;AREA    DATA, ALIGN=2   
@@ -210,19 +188,62 @@ CHECK_P2
 	bne GET_FIRST_TURN
 	bl PLAYER2_FIRST
 	
+WHILE3
+	
+	mov32 r0, port_E
+	ldr r1, [r0, #0x10] ;get button p1
+	eor r1, #0x4 ;inverse button 1 on 0 off
+	lsr r1, #2 ;move bit to first position
+	and r1,  
+	
+	mov32 r0, sysTick
+	ldr r1, [r0, #0x10] 
+	cmp r3, r1, lsr #16 ;is timer done
+	bne WHILE3
 	
 	
 	
 	
 	
 PLAYER1_FIRST
-	push{r0}
-	push{r1}
 	
+	lsr r11, #1 ;move p1 right 1
+	mov r10, #0x2 ;wait on p2
+	;*****store switch pins 0,1 in r4**********
+	mov r3, #0x3 ;dip switch value ****TODO, get did switch values
+	bl COMPUTE_PLAYER_DELAY
+	mov r3, r5 ;store value r5 from COMPUTE_PLAYER_DELAY into R3 for timer 
+	TIMER
 	bx lr
 
 PLAYER2_FIRST
+
+	lsl r12, #1 ;move p2 left 1
+	mov r10, #0x1 ;wait on p1
+	mov r3, #0x3 ;dip switch value ****TODO, get did switch values
+	;**********store switch pins 2,3 in r3, use lsr #2***********
+	bl COMPUTE_PLAYER_DELAY
+	mov32 r3, r5 ;store value r5 from COMPUTE_PLAYER_DELAY into R3 for timer
+	TIMER
 	bx lr
+	
+COMPUTE_PLAYER_DELAY
+	;r3 is the current switch value
+	;r9 is current draw number
+	mul r3, #80 ;p.sn*80
+	mov r5, #320 
+	sub r5, r3 ;r5=320 - 80*p.sn
+	
+	mov r3, #0x4
+	cmp r3, r9 ;if(4>=draws)
+	bge continue1 ;else r3=4
+	mov r3, r9 ; if(4>=draws) r3=num draws
+continue1
+	lsr r5, r3	;left shift r5 by min(4,draws)
+	
+	bx lr ;END COMPUTE_PLAYER_DELAY, return value in r5
+	
+	
 ;********************OLD CODE*********************	
 delay
 	ldr R1, [R7, #0x3FC]

@@ -1,0 +1,66 @@
+﻿psuedo code sumo
+
+
+init
+        draw = 0 ;R2
+end init
+
+
+
+
+standby
+        while p1!ready && p2!ready        ;p1 button pe2, p2 button pe3
+                if(p1!ready) blink p1
+                if(p2!ready) blink p2
+                p1.sn = dip[0,1]
+                p2.sn = dip[2,3] (lsr(2))
+        end while
+end standby
+
+
+
+
+
+
+MainLoop
+        timer(rand(1,2))
+        while(!timer.done)
+                if(p1.pressed || p2.pressed) goto MainLoop
+        end while
+        move p2 right
+        move p1 left
+        if(p1.pressed) 
+                move p1 right
+                playerturn = p2
+                timer(2^(-min(draws,4))*(320 - 80*p2.sn))
+        else if(p2.pressed)
+                move p2 left
+                playerturn =p1
+                timer(2^(-min(draws,4))*(320 - 80*p1.sn))
+        end if
+        while (!timer.done)
+                if(p1.pressed && playerturn == p1)
+                        move p1 right
+                        draw++
+                        goto MainLoop
+                end if
+                if(p2.pressed && playerturn == p2)
+                        move p2 left
+                        draw++
+                        goto Main loop
+                end if
+        end while
+        draw = 0
+        if(playerturn == p1) ;p1 missed their turn
+                move p2 left
+        end if
+        if(playerturn == p2) ;p2 missed their turn
+                move p1 right
+        end if
+        if(p1 on left edge || p2 on right edge) goto gameOver
+        goto MainLoop
+end MainLoop
+
+
+gameOver
+        blink p1, p2 current positions

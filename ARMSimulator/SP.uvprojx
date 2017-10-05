@@ -388,6 +388,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Documents</GroupName>
+          <Files>
+            <File>
+              <FileName>psuedoCode.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\psuedoCode.txt</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>
