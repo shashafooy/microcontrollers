@@ -23,6 +23,8 @@ sysTick equ 0xe000e000
 port_B equ 0x40005000 ;Port B
 port_E equ 0x40024000
 port_C equ 0x40006000	
+generalTimer4 equ 0x40034000
+RCGCTimer equ 0x400FE000
 	
 Start  
 	mov32 R0, #0x400FE108 ; Enable GPIO Clock
@@ -86,7 +88,7 @@ STANDBY
 	str r1, [r0, #0xc0] ;set led 4,5 to inverted value
 	
 
-	mov32 r3, #0x2625a00 ; 0.5 Seconds
+	mov32 r3, #0x7a1200 ; 0.5 Seconds
 	bl TIMER
 	
 blinkDelay
@@ -107,6 +109,7 @@ TIMER
 	push {r0}
 	push {r1}
 	
+	;******change from systick to general purpose timer
 	mov32 r0, sysTick
 	mov r1, #4
 	str r1, [r0, #0x10] ;stop sysTick, use system clock
@@ -125,6 +128,7 @@ TIMER
 UPDATE_LED
 	push{r0}
 	push{r1}
+	push{r2}
 	push{r3}
 	
 	orr r3, r11, r12 ;which leds turn on
@@ -135,27 +139,39 @@ UPDATE_LED
 	mov32 r0, port_E
 	str r3, [r0, #0xc]
 	
+	mov32 r1, #0x4c4b400 ;1 second
+	mov32 r0, sysTick
+    ldr r3, [r0, #0x18] ;load current sysTick
+    add r8, r3 ;add current sysTick value into r8
+	
 	pop{r3}
+	pop{r2}
 	pop{r1}
 	pop{r0}
 	bx lr
 
 RND12
-    push{r0}
     push{r1}
-    push{r2}
 
-    mov32 r0, sysTick
-    ldr r3, [r0, #0x18] ;load current sysTick
-    ldr r2, [r0, #0x14] ;load reset sysTick value
-    udiv r3, r2 ;current/max = value 0-1
+    ;mov32 r0, sysTick
+    ;ldr r3, [r0, #0x18] ;load current sysTick
+    ;ldr r2, [r0, #0x14] ;load reset sysTick value
+    ;udiv r3, r2 ;current/1sec = value 0-1
     
-    mov32 r1, #0x4c4b400 ;1 second
-    add r3, r1 ;add 1 second
-    
-    pop{r2}
+	;mov r1, #0x4
+	;mul r8, r1
+    mov32 r1, #0xf42400 ;1 second 16MHz
+looprnd
+	cmp r8, r1 ;r8>1 sec?
+	ble endlooprnd
+	sub r8, r1 ;if (r8>1sec) r8-1 sec
+	b looprnd
+endlooprnd
+    add r3, r1, r8 ;add 1 second
+	;mov32 r3, #0xf42400
+	;cmp r3, #0xFFFFFF ;max value of systick timer
+	;******SETUP General purpose Timer, systick is too small***********
     pop{r1}
-    pop{r0}
 	bx lr
 	
 START_GAME
@@ -256,7 +272,7 @@ blink1
     eor r11, r4 ;flip r11
     eor r12, r5 ;flip r12
     bl UPDATE_LED
-    mov32 r3, #0x2625a00
+    mov32 r3, #0x7a1200 ;0.5 sec
     push{lr}
     bl TIMER ;delay of 0.5 sec
     pop{lr}
@@ -320,8 +336,8 @@ COMPUTE_PLAYER_DELAY
 continue1
 	lsr r5, r3	;left shift r5 by min(4,draws)
 	
-    mov32 r2, #0x13880 ;80,000
-    mul r5, r2 ;value of r5 * 80,000 to get time in ms
+    mov32 r2, #0x3e80 ;16,000
+    mul r5, r2 ;value of r5 * 16,000 to get time in ms
     pop{r2}
 	bx lr ;END COMPUTE_PLAYER_DELAY, return value in r5
 
