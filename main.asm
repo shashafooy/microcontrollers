@@ -23,7 +23,7 @@ sysTick equ 0xe000e000
 port_B equ 0x40005000 ;Port B
 port_E equ 0x40024000
 port_C equ 0x40006000	
-generalTimer4 equ 0x40034000
+TMW0 equ 0x40036000
 RCGCTimer equ 0x400FE000
 	
 Start  
@@ -32,6 +32,26 @@ Start
 	str R1, [R0]
 	
 
+		
+	;theoretical general purpose timers setup
+	mov32 r0, RCGCTimer
+	mov r1, #0x1 ;for timer 0
+	str r1, [r0, #0x65c] ;enable clock for timerwide RCGCWTIMER pg. 355
+	mov32 r0, TMW0
+	mov r1, #0x0
+	str r1, [r0, #0x00c] ;turn off timer
+	mov r1, #0x4
+	str r1, [r0] ;32 bit wide timer
+	mov r1, #0x2
+	str r1, [r0, #0x004] ;set timer to periodic
+	mov32 r1, #0x0a2f4cd5 ;load value, example
+	str r1, [r0, #0x028] ;write to set reload value, read to get current value
+	mov r1, #0x1
+	str r1, [r0, #0x00c]
+	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
+	mov r1, #0x1
+	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
+		
 		
 	mov32 R0, port_B ;Port B
 	;mov R1, #0x4C4F434B

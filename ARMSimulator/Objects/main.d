@@ -1,1 +1,1 @@
-.\objects\main.o: main.asm
+.\objects\main.o: ..\main.asm
