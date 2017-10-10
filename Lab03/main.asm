@@ -24,34 +24,44 @@ port_B equ 0x40005000 ;Port B
 port_E equ 0x40024000
 port_C equ 0x40006000	
 TMW0 equ 0x40036000
+TMW1 equ 0x40037000
 RCGCTimer equ 0x400FE000
 	
 Start  
 	mov32 R0, #0x400FE108 ; Enable GPIO Clock
-	mov R1, #0x32
+	mov R1, #0x16 ;clock for port b,c,e
 	str R1, [R0]
 	
-
+	mov32 r0, RCGCTimer
+	mov r1, #0x3 ;for timer 0 and 1
+	str r1, [r0, #0x65c] ;enable clock for timerwide RCGCWTIMER pg. 355
 		
 	;theoretical general purpose timers setup
-	mov32 r0, RCGCTimer
-	mov r1, #0x1 ;for timer 0
-	str r1, [r0, #0x65c] ;enable clock for timerwide RCGCWTIMER pg. 355
-	mov32 r0, TMW0
+	mov32 R0, port_C
+	;mov32 r1, #0x4C4F434B
+	;str r1, [r0, #0x520] ;unlock port C
+	;mov R2, #0x0
+	mov R1, #0x0
+	str R1, [R0, #0x420] ;turn off alt function	
+	mov R1, #0x0F
+	str R1, [R0, #0x400] ;Port C input 4-7
+	mov R1, #0xf0
+;	str R1, [R0,#0x510] ;pull up *****may be bug here******
+	mov R1, #0xf0
+	str R1, [R0, #0x51c] ;Port C pin 4-7 on
+	
+	mov32 r0, TMW1
+
 	mov r1, #0x0
 	str r1, [r0, #0x00c] ;turn off timer
 	mov r1, #0x4
 	str r1, [r0] ;32 bit wide timer
 	mov r1, #0x2
 	str r1, [r0, #0x004] ;set timer to periodic
-	mov32 r1, #0x0a2f4cd5 ;load value, example
+	mov32 r1, #0x007a1200 ;load value, 0.5 second
 	str r1, [r0, #0x028] ;write to set reload value, read to get current value
 	mov r1, #0x1
-	str r1, [r0, #0x00c]
-	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
-	mov r1, #0x1
-	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
-		
+	str r1, [r0, #0x00c] ;enable timer
 		
 	mov32 R0, port_B ;Port B
 	;mov R1, #0x4C4F434B
@@ -74,15 +84,7 @@ Start
 	str R1,[R0,#0x51C] ;Port E pin 0-3 on
 	
 	
-	;mov32 R0, port_C
-	;mov R1, #0x0
-	;str R1, [R0, #0x420] ;turn off alt function	
-	;mov R1, #0x0
-	;str R1, [R0, #0x400] ;Port C input 4-7
-	;mov R1, #0xf0
-	;str R1, [R0,#0x510] ;pull up *****may be bug here******
-	;mov R1, #0xf0
-	;str R1, [R0, #0x51c] ;Port C pin 4-7 on
+
 	
 	
 	
@@ -119,10 +121,12 @@ blinkDelay
 	cmp r2, #0x0c ;p1 and p2 are ready, might be #0xc
 	beq START_GAME ;start game
     
-    mov32 r0, sysTick
-	ldr r1, [r0, #0x10]
-	cmp r3, r1, lsr #16
+    mov32 r0, TMW0
+	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
+	cmp r1, #0x1
 	bne blinkDelay
+	mov r1, #0x1
+	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
 	b STANDBY
 	
 TIMER
@@ -130,16 +134,31 @@ TIMER
 	push {r1}
 	
 	;******change from systick to general purpose timer
-	mov32 r0, sysTick
-	mov r1, #4
-	str r1, [r0, #0x10] ;stop sysTick, use system clock
-	;mov32 r1, #0x7a1200 ;7a1200
-	str r3, [r0, #0x14] ;set reset value to r3
-	str r3, [r0, #0x18] ;set current value to r3
-	ldr r1, [r0, #0x10]
-	orr r1, #0x1
-	str r1, [r0, #0x10] ;enable clock
-	mov r3, #0x1
+	;mov32 r0, sysTick
+	;mov r1, #4
+	;str r1, [r0, #0x10] ;stop sysTick, use system clock
+	;;mov32 r1, #0x7a1200 ;7a1200
+	;str r3, [r0, #0x14] ;set reset value to r3
+	;str r3, [r0, #0x18] ;set current value to r3
+	;ldr r1, [r0, #0x10]
+	;orr r1, #0x1
+	;str r1, [r0, #0x10] ;enable clock
+	;mov r3, #0x1
+	
+	
+	mov32 r0, TMW0
+	mov r1, #0x0
+	str r1, [r0, #0x00c] ;turn off timer
+	mov r1, #0x4
+	str r1, [r0] ;32 bit wide timer
+	mov r1, #0x2
+	str r1, [r0, #0x004] ;set timer to periodic
+	str r3, [r0, #0x028] ;load r3 value into timer
+	mov r1, #0x1
+	str r1, [r0, #0x00c] ;enable timer
+	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
+	mov r1, #0x1
+	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
 	
 	pop {r1}
 	pop {r0}
@@ -171,7 +190,9 @@ UPDATE_LED
 	bx lr
 
 RND12
+	push{r2}
     push{r1}
+	push{r0}
 
     ;mov32 r0, sysTick
     ;ldr r3, [r0, #0x18] ;load current sysTick
@@ -180,18 +201,28 @@ RND12
     
 	;mov r1, #0x4
 	;mul r8, r1
-    mov32 r1, #0xf42400 ;1 second 16MHz
-looprnd
-	cmp r8, r1 ;r8>1 sec?
-	ble endlooprnd
-	sub r8, r1 ;if (r8>1sec) r8-1 sec
-	b looprnd
-endlooprnd
-    add r3, r1, r8 ;add 1 second
+;    mov32 r1, #0xf42400 ;1 second 16MHz
+;looprnd
+;	cmp r8, r1 ;r8>1 sec?
+;	ble endlooprnd
+;	sub r8, r1 ;if (r8>1sec) r8-1 sec
+;	b looprnd
+;endlooprnd
+    ;add r3, r1, r8 ;add 1 second
 	;mov32 r3, #0xf42400
 	;cmp r3, #0xFFFFFF ;max value of systick timer
 	;******SETUP General purpose Timer, systick is too small***********
+	
+	mov32 r0, TMW1
+	ldr r1, [r0, #0x050] ;get current timer1 value
+	mov r2, #0x2
+	mul r1, r2
+	mov32 r2, #0xf42400 ;1 sec
+	add r3, r1, r2 ;rng 1-2
+	
+	pop{r0}
     pop{r1}
+	pop{r2}
 	bx lr
 	
 START_GAME
@@ -209,11 +240,13 @@ WHILE2 ;while(!timer.done)
 	cmp r1, #0x0000
 	bne Loop ;player pressed button early
 	
-	mov32 r0, sysTick
-	ldr r1, [r0, #0x10] 
-	lsr r1, #16
-	cmp r3, r1 ;is timer done
+	mov32 r0, TMW0
+	
+	ldr r1, [r0, #0x01c] ;poll timer
+	cmp r1, #0x1 ;is timer done
 	bne WHILE2 ;end while(!timer.done)
+	mov r1, #0x1
+	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling	
 	
 	lsl r11, #1 ;move p1 left 1
 	lsr r12, #1 ;move p2 right 1
@@ -258,11 +291,13 @@ skipP1
     b Loop
 skipP2 ;no buttons pressed
 
-	mov32 r0, sysTick
-	ldr r1, [r0, #0x10] 
-	cmp r3, r1, lsr #16 ;is timer done
+	mov32 r0, TMW0
+	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
+	cmp r1, #0x1
 	bne WHILE3
-    
+    mov r1, #0x1
+	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
+	
     mov r9, #0 
 ;    mov32 r0, port_E
 ;    ldr r1, [r0, #0x10]
@@ -296,11 +331,13 @@ blink1
     push{lr}
     bl TIMER ;delay of 0.5 sec
     pop{lr}
-    mov32 r0, sysTick
+    mov32 r0, TMW0
 blinkDelay1
-	ldr r1, [r0, #0x10]
-	cmp r3, r1, lsr #16
+	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
+	cmp r1, #0x1
 	bne blinkDelay1 ;delay of 0.5 sec
+	mov r1, #0x1
+	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
     b blink1 ;endlessly loop until reset
 	
     
@@ -311,8 +348,11 @@ PLAYER1_FIRST
     bl UPDATE_LED
     pop{lr}
 	mov r10, #0x2 ;wait on p2
-	;*****store switch pins 0,1 in r4**********
-	mov r3, #0x0 ;dip switch value ****TODO, get did switch values
+	;*****store switch pins 0,1 in r3**********
+	mov32 r0, port_C
+	ldr r3, [r0, #0x300] ;get pins 6,7, get p2 delay
+	lsr r3, #6
+	;mov r3, #0x0 ;dip switch value ****TODO, get did switch values
     push{lr}
 	bl COMPUTE_PLAYER_DELAY
     pop{lr}
@@ -329,7 +369,10 @@ PLAYER2_FIRST
     bl UPDATE_LED
     pop{lr}
 	mov r10, #0x1 ;wait on p1
-	mov r3, #0x0 ;dip switch value ****TODO, get did switch values
+	mov32 r0, port_C
+	ldr r3, [r0, #0x0c0] ;get pins 4,5, get p1 delay
+	lsr r3, #4 
+	;mov r3, #0x0 ;dip switch value ****TODO, get did switch values
 	;**********store switch pins 2,3 in r3, use lsr #2***********
     push{lr}
 	bl COMPUTE_PLAYER_DELAY
