@@ -36,22 +36,15 @@ Start
 	mov r1, #0x3 ;for timer 0 and 1
 	str r1, [r0, #0x65c] ;enable clock for timerwide RCGCWTIMER pg. 355
 		
-	;theoretical general purpose timers setup
 	mov32 R0, port_C
-	;mov32 r1, #0x4C4F434B
-	;str r1, [r0, #0x520] ;unlock port C
-	;mov R2, #0x0
 	mov R1, #0x0
 	str R1, [R0, #0x420] ;turn off alt function	
 	mov R1, #0x0F
 	str R1, [R0, #0x400] ;Port C input 4-7
 	mov R1, #0xf0
-;	str R1, [R0,#0x510] ;pull up *****may be bug here******
-	mov R1, #0xf0
 	str R1, [R0, #0x51c] ;Port C pin 4-7 on
 	
 	mov32 r0, TMW1
-
 	mov r1, #0x0
 	str r1, [r0, #0x00c] ;turn off timer
 	mov r1, #0x4
@@ -64,7 +57,6 @@ Start
 	str r1, [r0, #0x00c] ;enable timer
 		
 	mov32 R0, port_B ;Port B
-	;mov R1, #0x4C4F434B
 	mov R1, #0x0
 	str R1, [R0, #0x420] ;turn off alt function, may need unlock
 	mov R1,#0xFF
@@ -126,25 +118,12 @@ blinkDelay
 	cmp r1, #0x1
 	bne blinkDelay
 	mov r1, #0x1
-	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
+	str r1, [r0, #0x024] ;clear status(done) pin,
 	b STANDBY
 	
 TIMER
 	push {r0}
 	push {r1}
-	
-	;******change from systick to general purpose timer
-	;mov32 r0, sysTick
-	;mov r1, #4
-	;str r1, [r0, #0x10] ;stop sysTick, use system clock
-	;;mov32 r1, #0x7a1200 ;7a1200
-	;str r3, [r0, #0x14] ;set reset value to r3
-	;str r3, [r0, #0x18] ;set current value to r3
-	;ldr r1, [r0, #0x10]
-	;orr r1, #0x1
-	;str r1, [r0, #0x10] ;enable clock
-	;mov r3, #0x1
-	
 	
 	mov32 r0, TMW0
 	mov r1, #0x0
@@ -156,9 +135,6 @@ TIMER
 	str r3, [r0, #0x028] ;load r3 value into timer
 	mov r1, #0x1
 	str r1, [r0, #0x00c] ;enable timer
-	ldr r1, [r0, #0x01c] ;poll this to check if done, 0th bit
-	mov r1, #0x1
-	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
 	
 	pop {r1}
 	pop {r0}
@@ -166,8 +142,6 @@ TIMER
 
 UPDATE_LED
 	push{r0}
-	push{r1}
-	push{r2}
 	push{r3}
 	
 	orr r3, r11, r12 ;which leds turn on
@@ -178,14 +152,7 @@ UPDATE_LED
 	mov32 r0, port_E
 	str r3, [r0, #0xc]
 	
-	mov32 r1, #0x4c4b400 ;1 second
-	mov32 r0, sysTick
-    ldr r3, [r0, #0x18] ;load current sysTick
-    add r8, r3 ;add current sysTick value into r8
-	
 	pop{r3}
-	pop{r2}
-	pop{r1}
 	pop{r0}
 	bx lr
 
@@ -194,25 +161,6 @@ RND12
     push{r1}
 	push{r0}
 
-    ;mov32 r0, sysTick
-    ;ldr r3, [r0, #0x18] ;load current sysTick
-    ;ldr r2, [r0, #0x14] ;load reset sysTick value
-    ;udiv r3, r2 ;current/1sec = value 0-1
-    
-	;mov r1, #0x4
-	;mul r8, r1
-;    mov32 r1, #0xf42400 ;1 second 16MHz
-;looprnd
-;	cmp r8, r1 ;r8>1 sec?
-;	ble endlooprnd
-;	sub r8, r1 ;if (r8>1sec) r8-1 sec
-;	b looprnd
-;endlooprnd
-    ;add r3, r1, r8 ;add 1 second
-	;mov32 r3, #0xf42400
-	;cmp r3, #0xFFFFFF ;max value of systick timer
-	;******SETUP General purpose Timer, systick is too small***********
-	
 	mov32 r0, TMW1
 	ldr r1, [r0, #0x050] ;get current timer1 value
 	mov r2, #0x2
@@ -271,7 +219,7 @@ WHILE3 ;while(!timer.done)
 	ldr r1, [r0, #0x20] ;get button p1
 	eor r1, #0x8 ;inverse button, 1 on 0 off
 	lsr r1, #3 ;move p1 bit to first position
-    cmp r1, r10
+    cmp r1, r10 ;check if it was p1's turn
     bne skipP1 
     ;if(p1.pressed && playerturn ==p1)
 	lsr r11, #1 ;move p1 right
@@ -282,7 +230,7 @@ skipP1
     ldr r1, [r0, #0x10] ;get button p2
 	eor r1, #0x4 ;inverse button, 1 on 0 off
 	lsr r1, #1 ;move p2 bit to second position
-    cmp r1, r10
+    cmp r1, r10 ;check if it was p2's turn
     bne skipP2
     ;if(p2.pressed && playerturn ==p2)
     lsl r12, #1 ;move p2 left
@@ -298,11 +246,7 @@ skipP2 ;no buttons pressed
     mov r1, #0x1
 	str r1, [r0, #0x024] ;store 1 to this to clear status(done) pin, do this after polling
 	
-    mov r9, #0 
-;    mov32 r0, port_E
-;    ldr r1, [r0, #0x10]
-;    eor r1, #0x4
-;    lsr r1, #2 
+    mov r9, #0 ;reset draw to 0
     cmp r10, #0x1
     bne p2Turn
     lsl r12, #1 ;move p2 left
@@ -348,11 +292,9 @@ PLAYER1_FIRST
     bl UPDATE_LED
     pop{lr}
 	mov r10, #0x2 ;wait on p2
-	;*****store switch pins 0,1 in r3**********
 	mov32 r0, port_C
 	ldr r3, [r0, #0x300] ;get pins 6,7, get p2 delay
 	lsr r3, #6
-	;mov r3, #0x0 ;dip switch value ****TODO, get did switch values
     push{lr}
 	bl COMPUTE_PLAYER_DELAY
     pop{lr}
@@ -372,8 +314,6 @@ PLAYER2_FIRST
 	mov32 r0, port_C
 	ldr r3, [r0, #0x0c0] ;get pins 4,5, get p1 delay
 	lsr r3, #4 
-	;mov r3, #0x0 ;dip switch value ****TODO, get did switch values
-	;**********store switch pins 2,3 in r3, use lsr #2***********
     push{lr}
 	bl COMPUTE_PLAYER_DELAY
     pop{lr}
