@@ -1,0 +1,23 @@
+void clockfall(void){
+	if(charSize <8){
+		keystroke = keystroke << 1;
+		keystroke |= PE[0x004]; //get first bit of PE_DATA
+		charSize++;
+	}	
+}
+
+
+int main(void)
+{
+	init();
+	//your code here.
+	while(1){
+		while(queue.size() < 8);
+		char* x;
+		for (int i=0; i<8; i++){
+			x[i] = queue.pop();
+		}
+		queue.reset();
+		x = ps2_to_ascii[x - 0x15];
+		store(x);
+		

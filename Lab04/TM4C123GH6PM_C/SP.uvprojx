@@ -390,6 +390,11 @@
               <FileType>5</FileType>
               <FilePath>..\ps2_to_ascii.h</FilePath>
             </File>
+            <File>
+              <FileName>Psuedo Code.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Psuedo Code.txt</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
