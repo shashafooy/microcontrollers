@@ -8,11 +8,12 @@
   <Extensions>
     <cExt>*.c</cExt>
     <aExt>*.s*; *.src; *.a*</aExt>
-    <oExt>*.obj</oExt>
+    <oExt>*.obj; *.o</oExt>
     <lExt>*.lib</lExt>
     <tExt>*.txt; *.h; *.inc</tExt>
     <pExt>*.plm</pExt>
     <CppX>*.cpp</CppX>
+    <nMigrate>0</nMigrate>
   </Extensions>
 
   <DaveTm>
@@ -31,6 +32,7 @@
         <BeepAtEnd>1</BeepAtEnd>
         <RunSim>0</RunSim>
         <RunTarget>1</RunTarget>
+        <RunAbUc>0</RunAbUc>
       </OPTTT>
       <OPTHX>
         <HexSelection>1</HexSelection>
@@ -98,6 +100,7 @@
         <tRSysVw>1</tRSysVw>
         <sRunDeb>0</sRunDeb>
         <sLrtime>0</sLrtime>
+        <bEvRecOn>1</bEvRecOn>
         <nTsel>2</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
@@ -165,6 +168,17 @@
       </DebugFlag>
       <LintExecutable></LintExecutable>
       <LintConfigFile></LintConfigFile>
+      <bLintAuto>0</bLintAuto>
+      <bAutoGenD>0</bAutoGenD>
+      <LntExFlags>0</LntExFlags>
+      <pMisraName></pMisraName>
+      <pszMrule></pszMrule>
+      <pSingCmds></pSingCmds>
+      <pMultCmds></pMultCmds>
+      <pMisraNamep></pMisraNamep>
+      <pszMrulep></pszMrulep>
+      <pSingCmdsp></pSingCmdsp>
+      <pMultCmdsp></pMultCmdsp>
     </TargetOption>
   </Target>
 
@@ -179,11 +193,34 @@
       <FileNumber>1</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
-      <Focus>0</Focus>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\main.c</PathWithFileName>
+      <PathWithFileName>..\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>1</GroupNumber>
+      <FileNumber>2</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\ps2_to_ascii.h</PathWithFileName>
+      <FilenameWithoutPath>ps2_to_ascii.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>1</GroupNumber>
+      <FileNumber>3</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Psuedo Code.txt</PathWithFileName>
+      <FilenameWithoutPath>Psuedo Code.txt</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -203,19 +240,6 @@
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>1</RteFlg>
-    <File>
-      <GroupNumber>3</GroupNumber>
-      <FileNumber>2</FileNumber>
-      <FileType>2</FileType>
-      <tvExp>0</tvExp>
-      <Focus>0</Focus>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
-      <PathWithFileName>RTE\Device\LM3S1968\Startup.s</PathWithFileName>
-      <FilenameWithoutPath>Startup.s</FilenameWithoutPath>
-      <RteFlg>1</RteFlg>
-      <bShared>0</bShared>
-    </File>
   </Group>
 
 </ProjectOpt>

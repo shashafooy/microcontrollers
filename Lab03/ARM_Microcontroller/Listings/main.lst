@@ -1,0 +1,856 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         
+    2 00000000                 THUMB
+    3 00000000         ;AREA    DATA, ALIGN=2   
+    4 00000000                 AREA             |.text|, CODE, READONLY, ALIGN=
+2
+    5 00000000                 EXPORT           Start
+    6 00000000                 ALIGN
+    7 00000000         ;unlock 0x4C4F434B
+    8 00000000         
+    9 00000000         ;PF4 is SW1
+   10 00000000         ;PF0 is SW2
+   11 00000000         ;PF1 is RGB Red
+   12 00000000         ;Enable Clock RCGCGPIO p338
+   13 00000000         ;Set direction 1 is out 0 is in. GPIODIR
+   14 00000000         ;DEN 
+   15 00000000         ; 0x3FC
+   16 00000000         
+   17 00000000         ;GPIO Port B (APB): 0x4000.5000
+   18 00000000         ;GPIO Port E (APB): 0x4002.4000
+   19 00000000         
+   20 00000000         
+   21 00000000 E000E000 
+                       sysTick equ              0xe000e000
+   22 00000000         
+   23 00000000 40005000 
+                       port_B  equ              0x40005000  ;Port B
+   24 00000000 40024000 
+                       port_E  equ              0x40024000
+   25 00000000 40006000 
+                       port_C  equ              0x40006000
+   26 00000000 40036000 
+                       TMW0    equ              0x40036000
+   27 00000000 40037000 
+                       TMW1    equ              0x40037000
+   28 00000000 400FE000 
+                       RCGCTimer
+                               equ              0x400FE000
+   29 00000000         
+   30 00000000         Start
+   31 00000000 F24E 1008 
+              F2C4 000F        mov32            R0, #0x400FE108 
+                                                            ; Enable GPIO Clock
+                                                            
+   32 00000008 F04F 0116       mov              R1, #0x16   ;clock for port b,c
+                                                            ,e
+   33 0000000C 6001            str              R1, [R0]
+   34 0000000E         
+   35 0000000E F24E 0000 
+              F2C4 000F        mov32            r0, RCGCTimer
+   36 00000016 F04F 0103       mov              r1, #0x3    ;for timer 0 and 1
+   37 0000001A F8C0 165C       str              r1, [r0, #0x65c] ;enable clock 
+                                                            for timerwide RCGCW
+                                                            TIMER pg. 355
+   38 0000001E         
+   39 0000001E F246 0000 
+              F2C4 0000        mov32            R0, port_C
+   40 00000026 F04F 0100       mov              R1, #0x0
+   41 0000002A F8C0 1420       str              R1, [R0, #0x420] ;turn off alt 
+                                                            function 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   42 0000002E F04F 010F       mov              R1, #0x0F
+   43 00000032 F8C0 1400       str              R1, [R0, #0x400] 
+                                                            ;Port C input 4-7
+   44 00000036 F04F 01F0       mov              R1, #0xf0
+   45 0000003A F8C0 151C       str              R1, [R0, #0x51c] 
+                                                            ;Port C pin 4-7 on
+   46 0000003E         
+   47 0000003E F247 0000 
+              F2C4 0003        mov32            r0, TMW1
+   48 00000046 F04F 0100       mov              r1, #0x0
+   49 0000004A 60C1            str              r1, [r0, #0x00c] 
+                                                            ;turn off timer
+   50 0000004C F04F 0104       mov              r1, #0x4
+   51 00000050 6001            str              r1, [r0]    ;32 bit wide timer
+   52 00000052 F04F 0102       mov              r1, #0x2
+   53 00000056 6041            str              r1, [r0, #0x004] ;set timer to 
+                                                            periodic
+   54 00000058 F241 2100 
+              F2C0 017A        mov32            r1, #0x007a1200 ;load value, 0.
+                                                            5 second
+   55 00000060 6281            str              r1, [r0, #0x028] ;write to set 
+                                                            reload value, read 
+                                                            to get current valu
+                                                            e
+   56 00000062 F04F 0101       mov              r1, #0x1
+   57 00000066 60C1            str              r1, [r0, #0x00c] ;enable timer
+   58 00000068         
+   59 00000068 F245 0000 
+              F2C4 0000        mov32            R0, port_B  ;Port B
+   60 00000070 F04F 0100       mov              R1, #0x0
+   61 00000074 F8C0 1420       str              R1, [R0, #0x420] ;turn off alt 
+                                                            function, may need 
+                                                            unlock
+   62 00000078 F04F 01FF       mov              R1,#0xFF
+   63 0000007C F8C0 1400       str              R1,[R0,#0x400] 
+                                                            ;Port B output 0-7
+   64 00000080 F04F 01FF       mov              R1,#0xFF
+   65 00000084 F8C0 151C       str              R1,[R0,#0x51C] 
+                                                            ;Port B pin 0-7 on
+   66 00000088         
+   67 00000088         
+   68 00000088 F244 0000 
+              F2C4 0002        mov32            R0, port_E  ;Port E
+   69 00000090 F04F 0100       mov              R1, #0x0
+   70 00000094 F8C0 1420       str              R1, [R0, #0x420] ;turn off alt 
+                                                            function, may need 
+                                                            unlock
+   71 00000098 F04F 0103       mov              R1,#0x03
+   72 0000009C F8C0 1400       str              R1,[R0,#0x400] ;Port E output 0
+                                                            -1, input 2-3
+   73 000000A0 F04F 010C       mov              R1, #0x0c
+   74 000000A4 F8C0 1510       str              R1, [R0,#0x510] ;pull up
+   75 000000A8 F04F 010F       mov              R1,#0x0f
+   76 000000AC F8C0 151C       str              R1,[R0,#0x51C] 
+                                                            ;Port E pin 0-3 on
+   77 000000B0         
+   78 000000B0         
+   79 000000B0         
+   80 000000B0         
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   81 000000B0         
+   82 000000B0         
+   83 000000B0 F04F 0900       mov              R9, #0x0    ;draw counter
+   84 000000B4 F04F 0B20       mov              R11, #0x20  ;player 1 position
+   85 000000B8 F04F 0C10       mov              R12, #0x10  ;player 2 position
+   86 000000BC F04F 0200       mov              r2, #0      ;ready states of p1
+                                                            [0] and p2[1]
+   87 000000C0 F245 0000 
+              F2C4 0000        mov32            r0, port_B
+   88 000000C8 F04F 0130       mov              r1, #0x30
+   89 000000CC EA6F 0101       mvn              r1, r1
+   90 000000D0 F8C0 13FC       str              r1, [r0, #0x3fc] ;turns on cent
+                                                            er leds 
+   91 000000D4 F244 0000 
+              F2C4 0002        mov32            r0, port_E
+   92 000000DC F04F 0103       mov              r1, #0x3
+   93 000000E0 60C1            str              r1, [r0, #0xc]
+   94 000000E2         
+   95 000000E2         STANDBY
+   96 000000E2         
+   97 000000E2 F245 0000 
+              F2C4 0000        mov32            r0, port_B
+   98 000000EA F8D0 10C0       ldr              r1, [r0, #0xc0] ;load current v
+                                                            alues of led 4,5
+   99 000000EE EA6F 0101       mvn              r1, r1
+  100 000000F2 EA6F 0302       mvn              r3, r2
+  101 000000F6 EA01 0183       and              r1, r3, lsl #2
+  102 000000FA F8C0 10C0       str              r1, [r0, #0xc0] ;set led 4,5 to
+                                                             inverted value
+  103 000000FE         
+  104 000000FE         
+  105 000000FE F241 2300 
+              F2C0 037A        mov32            r3, #0x7a1200 ; 0.5 Seconds
+  106 00000106 F000 F816       bl               TIMER
+  107 0000010A         
+  108 0000010A         blinkDelay
+  109 0000010A F244 0000 
+              F2C4 0002        mov32            r0, port_E
+  110 00000112 6B01            ldr              R1, [R0, #0x30] ;get current bu
+                                                            ttons pressed
+  111 00000114 F081 010C       eor              r1, #0xc
+  112 00000118 EA42 0201       orr              r2, r1      ;refresh ready stat
+                                                            es of players
+  113 0000011C 2A0C            cmp              r2, #0x0c   ;p1 and p2 are read
+                                                            y, might be #0xc
+  114 0000011E D04C            beq              START_GAME  ;start game
+  115 00000120         
+  116 00000120 F246 0000 
+              F2C4 0003        mov32            r0, TMW0
+  117 00000128 69C1            ldr              r1, [r0, #0x01c] ;poll this to 
+                                                            check if done, 0th 
+                                                            bit
+  118 0000012A 2901            cmp              r1, #0x1
+  119 0000012C D1ED            bne              blinkDelay
+  120 0000012E F04F 0101       mov              r1, #0x1
+  121 00000132 6241            str              r1, [r0, #0x024] ;clear status(
+                                                            done) pin,
+  122 00000134 E7D5            b                STANDBY
+  123 00000136         
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  124 00000136         TIMER
+  125 00000136 B401            push             {r0}
+  126 00000138 B402            push             {r1}
+  127 0000013A         
+  128 0000013A F246 0000 
+              F2C4 0003        mov32            r0, TMW0
+  129 00000142 F04F 0100       mov              r1, #0x0
+  130 00000146 60C1            str              r1, [r0, #0x00c] 
+                                                            ;turn off timer
+  131 00000148 F04F 0104       mov              r1, #0x4
+  132 0000014C 6001            str              r1, [r0]    ;32 bit wide timer
+  133 0000014E F04F 0102       mov              r1, #0x2
+  134 00000152 6041            str              r1, [r0, #0x004] ;set timer to 
+                                                            periodic
+  135 00000154 6283            str              r3, [r0, #0x028] ;load r3 value
+                                                             into timer
+  136 00000156 F04F 0101       mov              r1, #0x1
+  137 0000015A 60C1            str              r1, [r0, #0x00c] ;enable timer
+  138 0000015C         
+  139 0000015C BC02            pop              {r1}
+  140 0000015E BC01            pop              {r0}
+  141 00000160 4770            bx               lr
+  142 00000162         
+  143 00000162         UPDATE_LED
+  144 00000162 B401            push{r0}
+  145 00000164 B408            push{r3}
+  146 00000166         
+  147 00000166 EA4B 030C       orr              r3, r11, r12 
+                                                            ;which leds turn on
+                                                            
+  148 0000016A EA6F 0303       mvn              r3, r3
+  149 0000016E F245 0000 
+              F2C4 0000        mov32            r0, port_B
+  150 00000176 F8C0 33FC       str              r3, [r0, #0x3fc]
+  151 0000017A EA4F 2313       lsr              r3, #8
+  152 0000017E F244 0000 
+              F2C4 0002        mov32            r0, port_E
+  153 00000186 60C3            str              r3, [r0, #0xc]
+  154 00000188         
+  155 00000188 BC08            pop{r3}
+  156 0000018A BC01            pop{r0}
+  157 0000018C 4770            bx               lr
+  158 0000018E         
+  159 0000018E         RND12
+  160 0000018E B404            push{r2}
+  161 00000190 B402            push{r1}
+  162 00000192 B401            push{r0}
+  163 00000194         
+  164 00000194 F247 0000 
+              F2C4 0003        mov32            r0, TMW1
+  165 0000019C 6D01            ldr              r1, [r0, #0x050] ;get current t
+                                                            imer1 value
+  166 0000019E F04F 0202       mov              r2, #0x2
+  167 000001A2 FB01 F102       mul              r1, r2
+  168 000001A6 F242 4200 
+              F2C0 02F4        mov32            r2, #0xf42400 ;1 sec
+  169 000001AE EB01 0302       add              r3, r1, r2  ;rng 1-2
+  170 000001B2         
+  171 000001B2 BC01            pop{r0}
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  172 000001B4 BC02            pop{r1}
+  173 000001B6 BC04            pop{r2}
+  174 000001B8 4770            bx               lr
+  175 000001BA         
+  176 000001BA         START_GAME
+  177 000001BA F245 0000 
+              F2C4 0000        mov32            r0, port_B
+  178 000001C2 F04F 01CF       mov              r1, #0xcf   ; cf=1100 1111, tur
+                                                            n on center led
+  179 000001C6 F8C0 10C0       str              r1, [r0, #0xc0] ;load current v
+                                                            alues of led 4,5
+  180 000001CA         
+  181 000001CA         Loop
+  182 000001CA F7FF FFE0       bl               RND12       ;get random value 1
+                                                            -2 and store in r3
+  183 000001CE F7FF FFB2       bl               TIMER       ;use value of r3 fr
+                                                            om rnd12
+  184 000001D2         WHILE2                               ;while(!timer.done)
+                                                            
+  185 000001D2 F244 0000 
+              F2C4 0002        mov32            r0, port_E
+  186 000001DA 6B01            ldr              R1, [R0, #0x30] ;get current bu
+                                                            ttons pressed
+  187 000001DC F081 010C       eor              r1, #0xc
+  188 000001E0 2900            cmp              r1, #0x0000
+  189 000001E2 D1F2            bne              Loop        ;player pressed but
+                                                            ton early
+  190 000001E4         
+  191 000001E4 F246 0000 
+              F2C4 0003        mov32            r0, TMW0
+  192 000001EC         
+  193 000001EC 69C1            ldr              r1, [r0, #0x01c] ;poll timer
+  194 000001EE 2901            cmp              r1, #0x1    ;is timer done
+  195 000001F0 D1EF            bne              WHILE2      ;end while(!timer.d
+                                                            one)
+  196 000001F2 F04F 0101       mov              r1, #0x1
+  197 000001F6 6241            str              r1, [r0, #0x024] ;store 1 to th
+                                                            is to clear status(
+                                                            done) pin, do this 
+                                                            after polling 
+  198 000001F8         
+  199 000001F8 EA4F 0B4B       lsl              r11, #1     ;move p1 left 1
+  200 000001FC EA4F 0C5C       lsr              r12, #1     ;move p2 right 1
+  201 00000200 F7FF FFAF       bl               UPDATE_LED
+  202 00000204         
+  203 00000204         GET_FIRST_TURN
+  204 00000204 F244 0000 
+              F2C4 0002        mov32            r0, port_E
+  205 0000020C 6B01            ldr              R1, [R0, #0x30] ;get current bu
+                                                            ttons pressed
+  206 0000020E F081 010C       eor              r1, #0xc
+  207 00000212 2908            cmp              r1, #0x8
+  208 00000214 D102            bne              CHECK_P2    ;player 1 button no
+                                                            t pressed
+  209 00000216 F000 F861       bl               PLAYER1_FIRST
+  210 0000021A E003            b                WHILE3
+  211 0000021C         CHECK_P2
+  212 0000021C 2904            cmp              r1, #0x4
+  213 0000021E D1F1            bne              GET_FIRST_TURN ;recheck buttons
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+                                                            , p2 button not pre
+                                                            ssed
+  214 00000220 F000 F879       bl               PLAYER2_FIRST
+  215 00000224         
+  216 00000224         WHILE3                               ;while(!timer.done)
+                                                            
+  217 00000224         
+  218 00000224 F244 0000 
+              F2C4 0002        mov32            r0, port_E
+  219 0000022C 6A01            ldr              r1, [r0, #0x20] ;get button p1
+  220 0000022E F081 0108       eor              r1, #0x8    ;inverse button, 1 
+                                                            on 0 off
+  221 00000232 EA4F 01D1       lsr              r1, #3      ;move p1 bit to fir
+                                                            st position
+  222 00000236 4551            cmp              r1, r10     ;check if it was p1
+                                                            's turn
+  223 00000238 D106            bne              skipP1
+  224 0000023A         ;if(p1.pressed && playerturn ==p1)
+  225 0000023A EA4F 0B5B       lsr              r11, #1     ;move p1 right
+  226 0000023E F7FF FF90       bl               UPDATE_LED
+  227 00000242 F109 0901       add              r9, #1      ;draw++
+  228 00000246 E7C0            b                Loop
+  229 00000248         skipP1
+  230 00000248 6901            ldr              r1, [r0, #0x10] ;get button p2
+  231 0000024A F081 0104       eor              r1, #0x4    ;inverse button, 1 
+                                                            on 0 off
+  232 0000024E EA4F 0151       lsr              r1, #1      ;move p2 bit to sec
+                                                            ond position
+  233 00000252 4551            cmp              r1, r10     ;check if it was p2
+                                                            's turn
+  234 00000254 D106            bne              skipP2
+  235 00000256         ;if(p2.pressed && playerturn ==p2)
+  236 00000256 EA4F 0C4C       lsl              r12, #1     ;move p2 left
+  237 0000025A F7FF FF82       bl               UPDATE_LED
+  238 0000025E F109 0901       add              r9, #1      ;draw++
+  239 00000262 E7B2            b                Loop
+  240 00000264         skipP2                               ;no buttons pressed
+                                                            
+  241 00000264         
+  242 00000264 F246 0000 
+              F2C4 0003        mov32            r0, TMW0
+  243 0000026C 69C1            ldr              r1, [r0, #0x01c] ;poll this to 
+                                                            check if done, 0th 
+                                                            bit
+  244 0000026E 2901            cmp              r1, #0x1
+  245 00000270 D1D8            bne              WHILE3
+  246 00000272 F04F 0101       mov              r1, #0x1
+  247 00000276 6241            str              r1, [r0, #0x024] ;store 1 to th
+                                                            is to clear status(
+                                                            done) pin, do this 
+                                                            after polling
+  248 00000278         
+  249 00000278 F04F 0900       mov              r9, #0      ;reset draw to 0
+  250 0000027C F1BA 0F01       cmp              r10, #0x1
+  251 00000280 D104            bne              p2Turn
+  252 00000282 EA4F 0C4C       lsl              r12, #1     ;move p2 left
+  253 00000286 F7FF FF6C       bl               UPDATE_LED
+  254 0000028A E004            b                checkWin
+  255 0000028C         p2Turn
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  256 0000028C EA4F 0B5B       lsr              r11, #1     ;move p1 right 1
+  257 00000290 F7FF FF67       bl               UPDATE_LED
+  258 00000294 E7FF            b                checkWin
+  259 00000296         
+  260 00000296         checkWin
+  261 00000296 F5BB 7F00       cmp              r11, #0x200 ;check if p1 on lef
+                                                            t edge
+  262 0000029A D003            beq              BLINK
+  263 0000029C F1BC 0F01       cmp              r12, #0x1   ;check if p2 on rig
+                                                            ht edge
+  264 000002A0 D000            beq              BLINK
+  265 000002A2 E792            b                Loop
+  266 000002A4         
+  267 000002A4         BLINK
+  268 000002A4 465C            mov              r4, r11
+  269 000002A6 4665            mov              r5, r12
+  270 000002A8         blink1
+  271 000002A8 EA8B 0B04       eor              r11, r4     ;flip r11
+  272 000002AC EA8C 0C05       eor              r12, r5     ;flip r12
+  273 000002B0 F7FF FF57       bl               UPDATE_LED
+  274 000002B4 F241 2300 
+              F2C0 037A        mov32            r3, #0x7a1200 ;0.5 sec
+  275 000002BC B500            push{lr}
+  276 000002BE F7FF FF3A       bl               TIMER       ;delay of 0.5 sec
+  277 000002C2 F85D EB04       pop{lr}
+  278 000002C6 F246 0000 
+              F2C4 0003        mov32            r0, TMW0
+  279 000002CE         blinkDelay1
+  280 000002CE 69C1            ldr              r1, [r0, #0x01c] ;poll this to 
+                                                            check if done, 0th 
+                                                            bit
+  281 000002D0 2901            cmp              r1, #0x1
+  282 000002D2 D1FC            bne              blinkDelay1 ;delay of 0.5 sec
+  283 000002D4 F04F 0101       mov              r1, #0x1
+  284 000002D8 6241            str              r1, [r0, #0x024] ;store 1 to th
+                                                            is to clear status(
+                                                            done) pin, do this 
+                                                            after polling
+  285 000002DA E7E5            b                blink1      ;endlessly loop unt
+                                                            il reset
+  286 000002DC         
+  287 000002DC         
+  288 000002DC         PLAYER1_FIRST
+  289 000002DC         
+  290 000002DC EA4F 0B5B       lsr              r11, #1     ;move p1 right 1
+  291 000002E0 B500            push{lr}
+  292 000002E2 F7FF FF3E       bl               UPDATE_LED
+  293 000002E6 F85D EB04       pop{lr}
+  294 000002EA F04F 0A02       mov              r10, #0x2   ;wait on p2
+  295 000002EE F246 0000 
+              F2C4 0000        mov32            r0, port_C
+  296 000002F6 F8D0 3300       ldr              r3, [r0, #0x300] ;get pins 6,7,
+                                                             get p2 delay
+  297 000002FA EA4F 1393       lsr              r3, #6
+  298 000002FE B500            push{lr}
+  299 00000300 F000 F826       bl               COMPUTE_PLAYER_DELAY
+  300 00000304 F85D EB04       pop{lr}
+  301 00000308 462B            mov              r3, r5      ;store value r5 fro
+                                                            m COMPUTE_PLAYER_DE
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+                                                            LAY into R3 for tim
+                                                            er 
+  302 0000030A B500            push{lr}
+  303 0000030C F7FF FF13       bl               TIMER
+  304 00000310 F85D EB04       pop{lr}
+  305 00000314 4770            bx               lr
+  306 00000316         
+  307 00000316         PLAYER2_FIRST
+  308 00000316         
+  309 00000316 EA4F 0C4C       lsl              r12, #1     ;move p2 left 1
+  310 0000031A B500            push{lr}
+  311 0000031C F7FF FF21       bl               UPDATE_LED
+  312 00000320 F85D EB04       pop{lr}
+  313 00000324 F04F 0A01       mov              r10, #0x1   ;wait on p1
+  314 00000328 F246 0000 
+              F2C4 0000        mov32            r0, port_C
+  315 00000330 F8D0 30C0       ldr              r3, [r0, #0x0c0] ;get pins 4,5,
+                                                             get p1 delay
+  316 00000334 EA4F 1313       lsr              r3, #4
+  317 00000338 B500            push{lr}
+  318 0000033A F000 F809       bl               COMPUTE_PLAYER_DELAY
+  319 0000033E F85D EB04       pop{lr}
+  320 00000342 462B            mov              r3, r5      ;store value r5 fro
+                                                            m COMPUTE_PLAYER_DE
+                                                            LAY into R3 for tim
+                                                            er
+  321 00000344 B500            push{lr}
+  322 00000346 F7FF FEF6       bl               TIMER
+  323 0000034A F85D EB04       pop{lr}
+  324 0000034E 4770            bx               lr
+  325 00000350         
+  326 00000350         COMPUTE_PLAYER_DELAY
+  327 00000350 B404            push{r2}
+  328 00000352         ;r3 is the current switch value
+  329 00000352         ;r9 is current draw number
+  330 00000352 F04F 0250       mov              r2, #0x50   ; 80
+  331 00000356 FB03 F302       mul              r3, r2      ;p.sn*80
+  332 0000035A F44F 75A0       mov              r5, #0x140  ;320
+  333 0000035E EBA5 0503       sub              r5, r3      ;r5=320 - 80*p.sn
+  334 00000362         
+  335 00000362 F04F 0304       mov              r3, #0x4
+  336 00000366 454B            cmp              r3, r9      ;if(4>=draws)
+  337 00000368 DD00            ble              continue1   ;else r3=4
+  338 0000036A 464B            mov              r3, r9      ; if(4>=draws) r3=n
+                                                            um draws
+  339 0000036C         continue1
+  340 0000036C FA25 F503       lsr              r5, r3      ;left shift r5 by m
+                                                            in(4,draws)
+  341 00000370         
+  342 00000370 F643 6280 
+              F2C0 0200        mov32            r2, #0x3e80 ;16,000
+  343 00000378 FB05 F502       mul              r5, r2      ;value of r5 * 16,0
+                                                            00 to get time in m
+                                                            s
+  344 0000037C BC04            pop{r2}
+  345 0000037E 4770            bx               lr          ;END COMPUTE_PLAYER
+                                                            _DELAY, return valu
+                                                            e in r5
+  346 00000380         
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  347 00000380                 ALIGN
+  348 00000380                 END
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\main.d -o.\objects\main.o -I.\RTE\_Target_1 -IC:\Keil
+_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\
+1.1.0\Device\Include\TM4C123 --predefine="__EVAL SETA 1" --predefine="__UVISION
+_VERSION SETA 524" --predefine="_RTE_ SETA 1" --predefine="TM4C123GH6PM SETA 1"
+ --list=.\listings\main.lst ..\main.asm
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 4 in file ..\main.asm
+   Uses
+      None
+Comment: .text unused
+BLINK 000002A4
+
+Symbol: BLINK
+   Definitions
+      At line 267 in file ..\main.asm
+   Uses
+      At line 262 in file ..\main.asm
+      At line 264 in file ..\main.asm
+
+CHECK_P2 0000021C
+
+Symbol: CHECK_P2
+   Definitions
+      At line 211 in file ..\main.asm
+   Uses
+      At line 208 in file ..\main.asm
+Comment: CHECK_P2 used once
+COMPUTE_PLAYER_DELAY 00000350
+
+Symbol: COMPUTE_PLAYER_DELAY
+   Definitions
+      At line 326 in file ..\main.asm
+   Uses
+      At line 299 in file ..\main.asm
+      At line 318 in file ..\main.asm
+
+GET_FIRST_TURN 00000204
+
+Symbol: GET_FIRST_TURN
+   Definitions
+      At line 203 in file ..\main.asm
+   Uses
+      At line 213 in file ..\main.asm
+Comment: GET_FIRST_TURN used once
+Loop 000001CA
+
+Symbol: Loop
+   Definitions
+      At line 181 in file ..\main.asm
+   Uses
+      At line 189 in file ..\main.asm
+      At line 228 in file ..\main.asm
+      At line 239 in file ..\main.asm
+      At line 265 in file ..\main.asm
+
+PLAYER1_FIRST 000002DC
+
+Symbol: PLAYER1_FIRST
+   Definitions
+      At line 288 in file ..\main.asm
+   Uses
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 209 in file ..\main.asm
+Comment: PLAYER1_FIRST used once
+PLAYER2_FIRST 00000316
+
+Symbol: PLAYER2_FIRST
+   Definitions
+      At line 307 in file ..\main.asm
+   Uses
+      At line 214 in file ..\main.asm
+Comment: PLAYER2_FIRST used once
+RND12 0000018E
+
+Symbol: RND12
+   Definitions
+      At line 159 in file ..\main.asm
+   Uses
+      At line 182 in file ..\main.asm
+Comment: RND12 used once
+STANDBY 000000E2
+
+Symbol: STANDBY
+   Definitions
+      At line 95 in file ..\main.asm
+   Uses
+      At line 122 in file ..\main.asm
+Comment: STANDBY used once
+START_GAME 000001BA
+
+Symbol: START_GAME
+   Definitions
+      At line 176 in file ..\main.asm
+   Uses
+      At line 114 in file ..\main.asm
+Comment: START_GAME used once
+Start 00000000
+
+Symbol: Start
+   Definitions
+      At line 30 in file ..\main.asm
+   Uses
+      At line 5 in file ..\main.asm
+Comment: Start used once
+TIMER 00000136
+
+Symbol: TIMER
+   Definitions
+      At line 124 in file ..\main.asm
+   Uses
+      At line 106 in file ..\main.asm
+      At line 183 in file ..\main.asm
+      At line 276 in file ..\main.asm
+      At line 303 in file ..\main.asm
+      At line 322 in file ..\main.asm
+
+UPDATE_LED 00000162
+
+Symbol: UPDATE_LED
+   Definitions
+      At line 143 in file ..\main.asm
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+   Uses
+      At line 201 in file ..\main.asm
+      At line 226 in file ..\main.asm
+      At line 237 in file ..\main.asm
+      At line 253 in file ..\main.asm
+      At line 257 in file ..\main.asm
+      At line 273 in file ..\main.asm
+      At line 292 in file ..\main.asm
+      At line 311 in file ..\main.asm
+
+WHILE2 000001D2
+
+Symbol: WHILE2
+   Definitions
+      At line 184 in file ..\main.asm
+   Uses
+      At line 195 in file ..\main.asm
+Comment: WHILE2 used once
+WHILE3 00000224
+
+Symbol: WHILE3
+   Definitions
+      At line 216 in file ..\main.asm
+   Uses
+      At line 210 in file ..\main.asm
+      At line 245 in file ..\main.asm
+
+blink1 000002A8
+
+Symbol: blink1
+   Definitions
+      At line 270 in file ..\main.asm
+   Uses
+      At line 285 in file ..\main.asm
+Comment: blink1 used once
+blinkDelay 0000010A
+
+Symbol: blinkDelay
+   Definitions
+      At line 108 in file ..\main.asm
+   Uses
+      At line 119 in file ..\main.asm
+Comment: blinkDelay used once
+blinkDelay1 000002CE
+
+Symbol: blinkDelay1
+   Definitions
+      At line 279 in file ..\main.asm
+   Uses
+      At line 282 in file ..\main.asm
+Comment: blinkDelay1 used once
+checkWin 00000296
+
+Symbol: checkWin
+   Definitions
+      At line 260 in file ..\main.asm
+   Uses
+      At line 254 in file ..\main.asm
+      At line 258 in file ..\main.asm
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Relocatable symbols
+
+
+continue1 0000036C
+
+Symbol: continue1
+   Definitions
+      At line 339 in file ..\main.asm
+   Uses
+      At line 337 in file ..\main.asm
+Comment: continue1 used once
+p2Turn 0000028C
+
+Symbol: p2Turn
+   Definitions
+      At line 255 in file ..\main.asm
+   Uses
+      At line 251 in file ..\main.asm
+Comment: p2Turn used once
+skipP1 00000248
+
+Symbol: skipP1
+   Definitions
+      At line 229 in file ..\main.asm
+   Uses
+      At line 223 in file ..\main.asm
+Comment: skipP1 used once
+skipP2 00000264
+
+Symbol: skipP2
+   Definitions
+      At line 240 in file ..\main.asm
+   Uses
+      At line 234 in file ..\main.asm
+Comment: skipP2 used once
+24 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+RCGCTimer 400FE000
+
+Symbol: RCGCTimer
+   Definitions
+      At line 28 in file ..\main.asm
+   Uses
+      At line 35 in file ..\main.asm
+Comment: RCGCTimer used once
+TMW0 40036000
+
+Symbol: TMW0
+   Definitions
+      At line 26 in file ..\main.asm
+   Uses
+      At line 116 in file ..\main.asm
+      At line 128 in file ..\main.asm
+      At line 191 in file ..\main.asm
+      At line 242 in file ..\main.asm
+      At line 278 in file ..\main.asm
+
+TMW1 40037000
+
+Symbol: TMW1
+   Definitions
+      At line 27 in file ..\main.asm
+   Uses
+      At line 47 in file ..\main.asm
+      At line 164 in file ..\main.asm
+
+port_B 40005000
+
+Symbol: port_B
+   Definitions
+      At line 23 in file ..\main.asm
+   Uses
+      At line 59 in file ..\main.asm
+      At line 87 in file ..\main.asm
+      At line 97 in file ..\main.asm
+      At line 149 in file ..\main.asm
+      At line 177 in file ..\main.asm
+
+port_C 40006000
+
+Symbol: port_C
+   Definitions
+      At line 25 in file ..\main.asm
+   Uses
+      At line 39 in file ..\main.asm
+      At line 295 in file ..\main.asm
+      At line 314 in file ..\main.asm
+
+port_E 40024000
+
+Symbol: port_E
+   Definitions
+      At line 24 in file ..\main.asm
+   Uses
+      At line 68 in file ..\main.asm
+      At line 91 in file ..\main.asm
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 109 in file ..\main.asm
+      At line 152 in file ..\main.asm
+      At line 185 in file ..\main.asm
+      At line 204 in file ..\main.asm
+      At line 218 in file ..\main.asm
+
+sysTick E000E000
+
+Symbol: sysTick
+   Definitions
+      At line 21 in file ..\main.asm
+   Uses
+      None
+Comment: sysTick unused
+7 symbols
+366 symbols in table
