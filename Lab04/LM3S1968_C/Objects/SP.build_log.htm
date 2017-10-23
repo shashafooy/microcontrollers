@@ -16,17 +16,22 @@ Linker/Locator:  ArmLink.exe V5.06 update 5 (build 528)
 Library Manager: ArmAr.exe V5.06 update 5 (build 528)
 Hex Converter:   FromElf.exe V5.06 update 5 (build 528)
 CPU DLL:         SARMCM3.DLL V5.24.1
-Dialog DLL:      DCM.DLL V1.16.0.0
+Dialog DLL:      DLM.DLL V1.26.0.0
 Target DLL:      lmidk-agdi.dll V???
-Dialog DLL:      TCM.DLL V1.32.0.0
+Dialog DLL:      TLM.DLL V1.24.0.0
  
 <h2>Project:</h2>
-C:\Users\aaron\Documents\MicroControllers\Labs\Lab03\ARM_Microcontroller\SP.uvprojx
+C:\Users\aaron\Documents\MicroControllers\Labs\Lab04\LM3S1968_C\SP.uvprojx
 Project File Date:  10/23/2017
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Target 1'
+assembling Startup.s...
+compiling main.c...
+linking...
+Program Size: Code=1008 RO-data=32 RW-data=84 ZI-data=2144  
+FromELF: creating hex file...
 ".\Objects\SP.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
@@ -38,25 +43,23 @@ Package Vendor: ARM
    * Component: CORE Version: 5.0.1
 
 Package Vendor: Keil
-                http://www.keil.com/pack/Keil.TM4C_DFP.1.1.0.pack
-                Keil.TM4C_DFP.1.1.0
-                Texas Instruments Tiva C Series Device Support and Examples
-   * Component: Startup Version: 1.0.1
+                http://www.keil.com/pack/Keil.LM3S_DFP.1.1.0.pack
+                Keil.LM3S_DFP.1.1.0
+                Texas Instruments LM3S Series Device Support
+   * Component: Startup Version: 1.0.0
 
 <h2>Collection of Component include folders:</h2>
   .\RTE\_Target_1
   C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include
-  C:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123
+  C:\Keil_v5\ARM\PACK\Keil\LM3S_DFP\1.1.0\Device\Include
 
 <h2>Collection of Component Files used:</h2>
 
-   * Component: Keil::Device:Startup:1.0.1
-      Include file:  Device\Include\TM4C123\TM4C123.h
-      Source file:   Device\Source\ARM\startup_TM4C123.s
-      Source file:   Device\Source\system_TM4C123.c
+   * Component: Keil::Device:Startup:1.0.0
+      Source file:   Device\Source\ARM\Startup.s
 
    * Component: ARM::CMSIS:CORE:5.0.1
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

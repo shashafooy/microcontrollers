@@ -1,0 +1,6 @@
+Dependencies for Project 'SP', Target 'Target 1': (DO NOT MODIFY !)
+F (..\main.c)(0x59EE7620)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I.\RTE\_Target_1-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\LM3S_DFP\1.1.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DLM3S1968-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+I (..\ps2_to_ascii.h)(0x59DFF01B)
+F (..\ps2_to_ascii.h)(0x59DFF01B)()
+F (..\Psuedo Code.txt)(0x59E91E83)()
+F (RTE\Device\LM3S1968\Startup.s)(0x55F76DDA)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I.\RTE\_Target_1-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\LM3S_DFP\1.1.0\Device\Include--pd "__UVISION_VERSION SETA 524" --pd "_RTE_ SETA 1" --pd "LM3S1968 SETA 1"--list .\listings\startup.lst --xref -o .\objects\startup.o --depend .\objects\startup.d)

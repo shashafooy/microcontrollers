@@ -25,6 +25,7 @@ volatile unsigned int RCGC2 __attribute__((at(0x400FE108)));
 volatile unsigned int PE_DATA __attribute__((at(0x400243FC)));
 volatile unsigned int PF_DATA __attribute__((at(0x400253FC)));
 volatile unsigned int PF_LOCK __attribute__((at(0x40025520)));
+volatile unsigned int INTERUPT_CONTROL __attribute__((at(0xE000E100)));
 
 unsigned char *PE = (unsigned char *) 0x40024000;
 unsigned char *PF = (unsigned char *) 0x40025000;
@@ -43,8 +44,9 @@ void init(){
 	PE[0x400] = 0x00; //pin 1,2 input
 	PE[0x51c] |= 0x03; //enable pin 1,2
 	
+	
 	PF_LOCK = UNLOCK;
-	PF[0x524] = 1; //unlock pin 0
+	PF[0x524] = 0xFF; //unlock pin 0
 	PF[0x420] &= 0x00; //turn off alt function
 	PF[0x514] = 0x1; //pull down
 	PF[0x400] = 0x0; //PF0 input
@@ -52,19 +54,21 @@ void init(){
 	
 	
 	
-	
+	INTERUPT_CONTROL = 0x30; //enable interrupts for port E, F
 	
 	//interrupt for port E clock pin 1
+	
 	PE[0x404] = 0x0; //interrupt on edge
 	PE[0x408] = 0x0; //disable both edges
 	PE[0x40c] = 0x0; //falling edge
-	PE[0x410] = 0x2; //enable interrupt
+	PE[0x410] = 0x2; //enable interrupt pin 1
+	//
 	//PE[0x414] interrupt status
 	
 	PF[0x404] = 0x0;
 	PF[0x408] = 0x0;
 	PF[0x40c] = 0x1; //rising edge
-	PE[0x410] = 0x1; //enable interrupt
+	PF[0x410] = 0x1; //enable interrupt pin 0
 	
 	
 	//UART Hell
@@ -78,7 +82,7 @@ void GPIOF_Handler(void){
 	
 	
 void GPIOE_Handler(void){ //***********Falling Clock edge*************
-	switch(PE[0x414]){ //change to interrupt pin
+	switch(PE[0x414]){ 
 		case 0x2: //clock interrupt, pin 1
 			PE[0x41c] = 0x2; //acknowledge pin 1 interrupt
 			if(charSize < 11){ //keyboard sends 11 bits at a time(maybe)
