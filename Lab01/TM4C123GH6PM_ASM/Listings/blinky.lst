@@ -1,0 +1,234 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 THUMB
+    2 00000000                 AREA             |.text|, CODE, READONLY, ALIGN=
+2
+    3 00000000                 EXPORT           Start
+    4 00000000         
+    5 00000000         
+    6 00000000 400FE018 
+                       GPIO_CLK
+                               DCD              0x400FE018  ;address for GPIO C
+                                                            lock
+    7 00000004 00000020 
+                       CLKVAL  DCD              0x0020      ;value for enabling
+                                                             gpios clock 
+    8 00000008 4C4F434B 
+                       UNLOCK  DCD              0x4C4F434B  ; gpio unlock code.
+                                                             
+    9 0000000C 40025000 
+                       GPIOF   DCD              0x40025000  ;base address for o
+                                                            ne of the GPIOs
+   10 00000010 0000000E 
+                       GPIOF_PINS
+                               DCD              0xE         ;value for configur
+                                                            ing the gpio
+   11 00000014         ;LIST the values toggled by the setup value.
+   12 00000014         ;i.e. gpio enable, pull up register, etc.  
+   13 00000014                 ALIGN
+   14 00000014         
+   15 00000014         Start
+   16 00000014 F24E 1008 
+              F2C4 000F        mov32            R0, #0x400FE108 
+                                                            ; Enable GPIO Clock
+                                                            
+   17 0000001C F04F 0120       mov              R1, #0x20
+   18 00000020 6001            str              R1, [R0]
+   19 00000022         
+   20 00000022 F245 0000 
+              F2C4 0002        mov32            R0, #0x40025000 ;GPIOF address
+   21 0000002A         
+   22 0000002A         ;unlock GPIOF
+   23 0000002A F244 314B 
+              F6C4 414F        mov32            R1, #0x4C4F434B ; GPIO Unlock c
+                                                            ode. 
+   24 00000032 F8C0 1520       str              R1, [R0,#0x520] ;
+   25 00000036         
+   26 00000036 F04F 011F       mov              R1, #0x1F
+   27 0000003A F8C0 1524       str              R1, [R0,#0x524] ;GPIOCR
+   28 0000003E F04F 0111       mov              R1, #0x11
+   29 00000042 F8C0 1510       str              R1, [R0,#0x510]
+   30 00000046 F04F 010F       mov              R1, #0x0F
+   31 0000004A F8C0 1400       str              R1, [R0,#0x400] ;GPIODIR
+   32 0000004E F04F 011F       mov              R1, #0x1F
+   33 00000052 F8C0 151C       str              R1, [R0,#0x51C] ;digital enable
+                                                            
+   34 00000056         loop
+   35 00000056 F240 0102 
+              F2C0 0100        MOV32            R1, #0x02   ;load value for tur
+                                                            ning on LED color R
+                                                            ed
+   36 0000005E 6381            STR              R1, [R0,#0x38] ;write the above
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                                                             value to GPIOF ODR
+                                                             register.
+   37 00000060         
+   38 00000060 F04F 0400       MOV              R4, #0      ;initial value for 
+                                                            iteration loop
+   39 00000064 F64F 75FF 
+              F2C0 0507        MOV32            R5, #0x7FFFF ;number of iterati
+                                                            ons for delay loops
+                                                            
+   40 0000006C         delay1
+   41 0000006C F104 0401       ADD              R4, #1      ; add 1 to register
+                                                             4
+   42 00000070 42AC            CMP              R4, R5      ;check number of it
+                                                            erations
+   43 00000072 DDFB            BLE              delay1      ;continue if iterat
+                                                            ed less than 0xFFFF
+                                                            F + 1 times, otherw
+                                                            ise repeat delay lo
+                                                            op
+   44 00000074         
+   45 00000074 F240 0104 
+              F2C0 0100        MOV32            R1, #0x04   ;load value for tur
+                                                            ning on LED color b
+                                                            lue
+   46 0000007C 6381            STR              R1, [R0, #0x38] ;write the abov
+                                                            e value to GPIOF OD
+                                                            R
+   47 0000007E         
+   48 0000007E F04F 0400       MOV              R4, #0      ;initial value for 
+                                                            iteration loop
+   49 00000082         ;   ; **** the tm4c123gh6pm has 16 MHz clock.
+   50 00000082         ;;     how long should the loop take with that clock?
+   51 00000082         
+   52 00000082         delay2
+   53 00000082 F104 0401       ADD              R4, #1      ;add 1 to register 
+                                                            4
+   54 00000086 42AC            CMP              R4, R5      ;check number of it
+                                                            erations
+   55 00000088 DDFB            BLE              delay2      ;continue if iterat
+                                                            ed less than 0xFFFF
+                                                            F + 1 times, otherw
+                                                            ise repeat delay lo
+                                                            op
+   56 0000008A         
+   57 0000008A F240 0105 
+              F2C0 0100        MOV32            R1, #0x05   ;load value for tur
+                                                            ning on LED Color G
+                                                            reen
+   58 00000092 6381            STR              R1, [R0, #0x38] ;write the abov
+                                                            e value to GPIOF OD
+                                                            R
+   59 00000094         
+   60 00000094 E7DF            B                loop        ;do it all over aga
+                                                            in, forever
+   61 00000096 00 00           ALIGN
+   62 00000098                 END
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\blinky.d -o.\objects\blinky.o -IC:\Users\A02107849\Do
+wnloads\TM4C123GH6PM_ASM\RTE -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta4\CMSIS\
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+Include -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123 --pred
+efine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 521" --predefine="_RT
+E_ SETA 1" --predefine="TM4C123GH6PM SETA 1" --list=.\listings\blinky.lst blink
+y.asm
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 2 in file blinky.asm
+   Uses
+      None
+Comment: .text unused
+CLKVAL 00000004
+
+Symbol: CLKVAL
+   Definitions
+      At line 7 in file blinky.asm
+   Uses
+      None
+Comment: CLKVAL unused
+GPIOF 0000000C
+
+Symbol: GPIOF
+   Definitions
+      At line 9 in file blinky.asm
+   Uses
+      None
+Comment: GPIOF unused
+GPIOF_PINS 00000010
+
+Symbol: GPIOF_PINS
+   Definitions
+      At line 10 in file blinky.asm
+   Uses
+      None
+Comment: GPIOF_PINS unused
+GPIO_CLK 00000000
+
+Symbol: GPIO_CLK
+   Definitions
+      At line 6 in file blinky.asm
+   Uses
+      None
+Comment: GPIO_CLK unused
+Start 00000014
+
+Symbol: Start
+   Definitions
+      At line 15 in file blinky.asm
+   Uses
+      At line 3 in file blinky.asm
+Comment: Start used once
+UNLOCK 00000008
+
+Symbol: UNLOCK
+   Definitions
+      At line 8 in file blinky.asm
+   Uses
+      None
+Comment: UNLOCK unused
+delay1 0000006C
+
+Symbol: delay1
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+   Definitions
+      At line 40 in file blinky.asm
+   Uses
+      At line 43 in file blinky.asm
+Comment: delay1 used once
+delay2 00000082
+
+Symbol: delay2
+   Definitions
+      At line 52 in file blinky.asm
+   Uses
+      At line 55 in file blinky.asm
+Comment: delay2 used once
+loop 00000056
+
+Symbol: loop
+   Definitions
+      At line 34 in file blinky.asm
+   Uses
+      At line 60 in file blinky.asm
+Comment: loop used once
+10 symbols
+345 symbols in table

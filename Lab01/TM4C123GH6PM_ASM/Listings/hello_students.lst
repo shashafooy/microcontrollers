@@ -1,0 +1,104 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             main, CODE, READONLY, ALIGN=2
+    2 00000000                 THUMB
+    3 00000000                 EXPORT           Start
+    4 00000000         
+    5 00000000         
+    6 00000000 48 65 6C 
+              6C 6F 20 
+              53 74 75 
+              64 65 6E 
+              74 73 21 
+              00       message DCB              "Hello Students!",0 ; message s
+                                                            tored readonly
+    7 00000010         
+    8 00000010                 ALIGN                        ;pg149
+    9 00000010 4807    Start   LDR              R0, =message ; load address of 
+                                                            the message
+   10 00000012         
+   11 00000012 4669            MOV              R1, SP      ; load memory locat
+                                                            ion to store
+   12 00000014 F04F 0304       MOV              R3, #4      ; used as a counter
+                                                            
+   13 00000018         
+   14 00000018 6802    load    LDR              R2,[R0]     ; load a word of th
+                                                            e message
+   15 0000001A F100 0004       ADD              R0, R0, #4  ; adds 4 to the poi
+                                                            nter  
+   16 0000001E         
+   17 0000001E F1A3 0301       SUB              R3, R3, #1  ; decrements counte
+                                                            r
+   18 00000022 600A            STR              R2,[R1]     ; store the word to
+                                                             memory, inc R1 by 
+                                                            4
+   19 00000024 F101 0104       ADD              R1, #4
+   20 00000028         
+   21 00000028 2B00            CMP              R3, #0      ; Check for null
+   22 0000002A D1F5            BNE              load        ; repeat if not nul
+                                                            l terminated
+   23 0000002C         
+   24 0000002C E7FE    loop    B                loop
+   25 0000002E         
+   26 0000002E 00 00           ALIGN
+   27 00000030                 END
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\hello_students.d -o.\objects\hello_students.o -IC:\Us
+ers\A02107849\Downloads\TM4C123GH6PM_ASM\RTE -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.
+0.0-Beta4\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Includ
+e\TM4C123 --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 521" 
+--predefine="_RTE_ SETA 1" --predefine="TM4C123GH6PM SETA 1" --list=.\listings\
+hello_students.lst hello_students.asm
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+Start 00000010
+
+Symbol: Start
+   Definitions
+      At line 9 in file hello_students.asm
+   Uses
+      At line 3 in file hello_students.asm
+Comment: Start used once
+load 00000018
+
+Symbol: load
+   Definitions
+      At line 14 in file hello_students.asm
+   Uses
+      At line 22 in file hello_students.asm
+Comment: load used once
+loop 0000002C
+
+Symbol: loop
+   Definitions
+      At line 24 in file hello_students.asm
+   Uses
+      At line 24 in file hello_students.asm
+Comment: loop used once
+main 00000000
+
+Symbol: main
+   Definitions
+      At line 1 in file hello_students.asm
+   Uses
+      None
+Comment: main unused
+message 00000000
+
+Symbol: message
+   Definitions
+      At line 6 in file hello_students.asm
+   Uses
+      At line 9 in file hello_students.asm
+Comment: message used once
+5 symbols
+342 symbols in table
