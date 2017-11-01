@@ -3,7 +3,8 @@
 #include "lcd.h"
 #include "lcd_configuration_test.h"
 
-
+unsigned int *PB_lcd = (unsigned int *) 0x40005000;
+unsigned int *SSI0_lcd = (unsigned int *) 0x40008000;
 
 
 
@@ -136,6 +137,12 @@ void write_dat(unsigned char data)
 	//Use this function to make sure you can get your LCD screen to function, 
 	// but then try your hand at writing the code in lcd_configuration_test.o
 	lcd_configuration_write_data(data);
+	
+	PB_lcd[0x0/4] = 1; //cx data;
+	SSI0_lcd[0x8/4] = data;
+	while((SSI0_lcd[0xc/4] & 0x1) == 0x0); //wait until data is done tx
+	
+	
 }
 
 //This function writes a command to the LCD screen
@@ -145,5 +152,10 @@ void write_cmd(unsigned char command)
 	//
 	//Use this function to make sure you can get your LCD screen to function, 
 	// but then try your hand at writing the code in lcd_configuration_test.o
-	lcd_configuration_write_command(command);
+	//lcd_configuration_write_command(command);
+	
+	PB_lcd[0x00/4] = 0; //cx command
+	SSI0_lcd[0x008/4] = command;
+	while((SSI0_lcd[0x00c/4] & 0x1)==0x0); //wait until command is done tx
+	
 }

@@ -1,6 +1,7 @@
 #ifndef LCD_C 
 #define LCD_C
 
+
 //definitions of useful colors. 
 // page 238 of the data sheet.
 #define white          0xFFFF

@@ -1,7 +1,6 @@
 #include "lcd.h"
 #include "lcd_configuration_test.h" //You can remove this line after you've removed the call to test_configuartion(unsigned int, unsigned char*, unsigned int*)
 
-
 unsigned int *PA = (unsigned int *) 0x40004000;
 unsigned int *PB = (unsigned int *) 0x40005000;
 unsigned int *SSI0 = (unsigned int *) 0x40008000;
