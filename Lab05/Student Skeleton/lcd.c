@@ -14,6 +14,8 @@ unsigned int *SSI0_lcd = (unsigned int *) 0x40008000;
 void lcd_init(void)
 {
 	int i;
+		write_cmd(0x28); //display off
+	
     write_cmd(0xCB);
     write_dat(0x39);
     write_dat(0x2C);
@@ -136,13 +138,19 @@ void write_dat(unsigned char data)
 	//
 	//Use this function to make sure you can get your LCD screen to function, 
 	// but then try your hand at writing the code in lcd_configuration_test.o
-	lcd_configuration_write_data(data);
+	//lcd_configuration_write_data(data);
 	
-	PB_lcd[0x0/4] = 1; //cx data;
+	PB_lcd[0x4/4] |= 0x1; //cx data;
+	PB_lcd[0x180/4] = 0x20;  // 010 0000 LCD chip 0, touch chip 1 (active low) 0x20
 	SSI0_lcd[0x8/4] = data;
-	while((SSI0_lcd[0xc/4] & 0x1) == 0x0); //wait until data is done tx
+	while(SSI0_lcd[0xc/4] >> 4 == 1); //check busy bit
+	PB_lcd[0x180/4] = 0x60; //LCD chip 1 (off) 0x60
 	
-	
+}
+
+void write_dat2(unsigned short data){
+	write_dat((unsigned char)(data >> 8));	
+	write_dat((unsigned char)data);
 }
 
 //This function writes a command to the LCD screen
@@ -153,9 +161,10 @@ void write_cmd(unsigned char command)
 	//Use this function to make sure you can get your LCD screen to function, 
 	// but then try your hand at writing the code in lcd_configuration_test.o
 	//lcd_configuration_write_command(command);
-	
-	PB_lcd[0x00/4] = 0; //cx command
-	SSI0_lcd[0x008/4] = command;
-	while((SSI0_lcd[0x00c/4] & 0x1)==0x0); //wait until command is done tx
-	
+	PB_lcd[0x4/4] = 0x0; //cx data;
+	PB_lcd[0x180/4] = 0x20;  // 010 0000 LCD chip 0, touch chip 1 (active low)
+	SSI0_lcd[0x8/4] = command;
+	while(SSI0_lcd[0xc/4] >> 4 == 1); //check busy bit
+	PB_lcd[0x180/4] = 0x60; //LCD chip 1 (off)
+
 }

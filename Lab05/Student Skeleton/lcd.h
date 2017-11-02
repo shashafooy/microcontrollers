@@ -1,7 +1,6 @@
 #ifndef LCD_C 
 #define LCD_C
 
-
 //definitions of useful colors. 
 // page 238 of the data sheet.
 #define white          0xFFFF
@@ -28,6 +27,7 @@ void lcd_init(void);
 //
 //It assumes that peripherals are configured configured and enabled
 void write_dat(unsigned char data);
+void write_dat2(unsigned short data);
 
 //This function writes a command to the LCD screen
 //
