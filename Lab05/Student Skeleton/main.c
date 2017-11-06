@@ -25,16 +25,7 @@ void initSSI(void);
 struct BtnData btn1, btn2, btn3;
 int i;
 bool btnPressed;
-
-void run(void){
-	while(1){
-		while(!btnPressed);
-		btnPressed = false;
-		
-	}
-	//toggleBtn(&btn1);
-	//toggleBtn(&btn1);
-}
+int xcord, ycord;
 
 void initBtn(void){
 	btn1.x_begin = 40; btn1.x_end = 200; btn1.y_begin = 20; 
@@ -91,9 +82,14 @@ void initPorts(void){
 	PB[0x410/4] = 0x4; //enable interrupt for pin 2
 }
 
+
 void GPIOB_Handler(void){
 	PB[0x41c/4] = 0x4; //acknowlege pin 2 interrupt
+	PB[0x410/4] = 0x0; //mask pin 2
+	xcord = get_touch_x();
+	ycord = get_touch_y();
 	btnPressed = true;
+	PB[0x410/4] = 0x4; //enable pin 2
 }
 
 void initSSI(void){
@@ -111,6 +107,17 @@ void initSSI(void){
 	
 	
 	
+}
+
+
+void run(void){
+	while(1){
+		while(!btnPressed);
+		btnPressed = false;
+		
+	}
+	//toggleBtn(&btn1);
+	//toggleBtn(&btn1);
 }
 
 int main(void)

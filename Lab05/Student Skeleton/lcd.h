@@ -34,4 +34,9 @@ void write_dat2(unsigned short data);
 //It assumes that peripherals are configured configured and enabled
 void write_cmd(unsigned char command);
 
+unsigned int get_touch_x(void);
+unsigned int get_touch_y(void);
+
+void waitBusy(void);
+
 #endif

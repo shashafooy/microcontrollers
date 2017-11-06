@@ -3,9 +3,14 @@
 #include "lcd.h"
 #include "lcd_configuration_test.h"
 
+
 unsigned int *PB_lcd = (unsigned int *) 0x40005000;
 unsigned int *SSI0_lcd = (unsigned int *) 0x40008000;
 
+
+void waitBusy(void){ 	
+	while(SSI0_lcd[0xc/4] >> 4 == 1); //check busy bit
+}
 
 
 //This function configures the LCD screen for using. 
@@ -161,10 +166,68 @@ void write_cmd(unsigned char command)
 	//Use this function to make sure you can get your LCD screen to function, 
 	// but then try your hand at writing the code in lcd_configuration_test.o
 	//lcd_configuration_write_command(command);
-	PB_lcd[0x4/4] = 0x0; //cx data;
+	PB_lcd[0x4/4] = 0x0; //cx cmd;
 	PB_lcd[0x180/4] = 0x20;  // 010 0000 LCD chip 0, touch chip 1 (active low)
 	SSI0_lcd[0x8/4] = command;
 	while(SSI0_lcd[0xc/4] >> 4 == 1); //check busy bit
 	PB_lcd[0x180/4] = 0x60; //LCD chip 1 (off)
 
+}
+
+unsigned int get_touch_x(void){
+	unsigned int retval = 0x0;
+	int garbage;
+
+	PB_lcd[0x180/4] = 0x40; //100 0000 LCD chip 1, touch chip 0
+	while(SSI0_lcd[0xc/4] >> 2 == 1); //wait until rx empty
+	
+	PB_lcd[0x4/4] = 0x0; //cx cmd
+	SSI0_lcd[0x8/4] = 0xD0; //cmd: get x 101
+	waitBusy();
+	
+	//transmit 0x0
+	PB_lcd[0x4/4] = 0x1; //cx data
+	SSI0_lcd[0x8/4] = 0x00; //tx null
+	waitBusy();
+	SSI0_lcd[0x8/4] = 0x00; //tx null
+	waitBusy();	
+	
+	garbage = SSI0_lcd[0x8/4]; //garbage
+	garbage++; //to get rid of warning
+	retval = SSI0_lcd[0x8/4] << 5; //A11-A5
+	retval |= SSI0_lcd[0x8/4] >> 3; //A4-A0
+	
+	PB_lcd[0x180/4] = 0x60; //100 0000 LCD chip 1, touch chip 1
+
+	return retval;
+	
+}
+unsigned int get_touch_y(void){
+	unsigned int retval = 0x0;
+	int garbage;
+	
+	PB_lcd[0x180/4] = 0x40; //100 0000 LCD chip 1, touch chip 0
+	while(SSI0_lcd[0xc/4] >> 2 == 1); //wait until rx empty
+	
+	//tx cmd
+	PB_lcd[0x4/4] = 0x0; //cx cmd
+	SSI0_lcd[0x8/4] = 0x90; //cmd: get y 001
+	waitBusy();
+	
+	//tx nonsense
+	PB_lcd[0x4/4] = 0x1; //cx data
+	SSI0_lcd[0x8/4] = 0x00; //tx null
+	waitBusy();
+	SSI0_lcd[0x8/4] = 0x00; //tx null
+	waitBusy();	
+	
+	//rx coordinate
+	garbage = SSI0_lcd[0x8/4]; //garbage
+	garbage++;
+	retval = SSI0_lcd[0x8/4] << 5; //A11-A5
+	retval |= SSI0_lcd[0x8/4] >> 3; //A4-A0
+	
+	PB_lcd[0x180/4] = 0x60; //100 0000 LCD chip 1, touch chip 1
+	return retval;
+	
 }

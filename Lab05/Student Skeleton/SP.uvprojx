@@ -405,6 +405,11 @@
               <FileType>5</FileType>
               <FilePath>.\Shapes.h</FilePath>
             </File>
+            <File>
+              <FileName>lcd.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\lcd.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
