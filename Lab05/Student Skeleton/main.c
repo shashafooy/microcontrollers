@@ -19,13 +19,15 @@ void run(void);
 void toggleBtn(struct BtnData *btn);
 void initPorts(void);
 void initSSI(void);
+void computeTouch(unsigned int, unsigned int);
 
 
 
 struct BtnData btn1, btn2, btn3;
-int i;
-bool btnPressed;
-int xcord, ycord;
+int i, current, touchItems;
+bool startTouch;
+unsigned int xcord[1000], ycord[1000];
+
 
 void initBtn(void){
 	btn1.x_begin = 40; btn1.x_end = 200; btn1.y_begin = 20; 
@@ -41,7 +43,7 @@ void initBtn(void){
 	draw_rectangle(btn2);
 	draw_rectangle(btn3);
 	
-	btnPressed = false;
+	startTouch = false;
 }
 
 void toggleBtn(struct BtnData *btn){
@@ -56,6 +58,8 @@ void toggleBtn(struct BtnData *btn){
 		draw_rectangle(*btn);
 		btn->on = true;
 	}
+	
+	//******toggle led too *******
 }
 
 
@@ -84,11 +88,14 @@ void initPorts(void){
 
 
 void GPIOB_Handler(void){
-	PB[0x41c/4] = 0x4; //acknowlege pin 2 interrupt
 	PB[0x410/4] = 0x0; //mask pin 2
-	xcord = get_touch_x();
-	ycord = get_touch_y();
-	btnPressed = true;
+	PB[0x41c/4] = 0x4; //acknowlege pin 2 interrupt
+	xcord[current] = get_touch_x();
+	ycord[current] = get_touch_y();
+	current++;
+	if(touchItems<1000) touchItems++;
+	if(current >= 1000) current = 0;
+	startTouch = true;
 	PB[0x410/4] = 0x4; //enable pin 2
 }
 
@@ -110,11 +117,35 @@ void initSSI(void){
 }
 
 
+
+void computeTouch(unsigned int xval, unsigned int yval){
+	if(xval > 0 && xval < 1 && yval > 0 && yval < 1){
+		toggleBtn(&btn1);
+	}
+	if(xval > 0 && xval < 1 && yval > 0 && yval < 1){
+		toggleBtn(&btn2);
+	}
+	if(xval > 0 && xval < 1 && yval > 0 && yval < 1){
+		toggleBtn(&btn3);
+	}
+}
+
+
+
 void run(void){
+	unsigned xval, yval;
 	while(1){
-		while(!btnPressed);
-		btnPressed = false;
-		
+		while(!startTouch); //wait until a touch has started
+		while(PB[0x10/4] >> 2 == 1); //wait until touch is done
+		startTouch= false;
+		current = touchItems = 0;
+		for(i = 0; i<touchItems; i++){
+			xval += xcord[i];
+			yval += ycord[i];
+		}
+		xval /= touchItems;
+		yval /= touchItems;
+		computeTouch(xval, yval);
 	}
 	//toggleBtn(&btn1);
 	//toggleBtn(&btn1);
