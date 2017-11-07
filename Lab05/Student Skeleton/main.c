@@ -7,26 +7,61 @@
 
 unsigned int *PA = (unsigned int *) 0x40004000;
 unsigned int *PB = (unsigned int *) 0x40005000;
+unsigned int *PC = (unsigned int *) 0x40006000;
 unsigned int *SSI0 = (unsigned int *) 0x40008000;
 unsigned int *SYSCTL = (unsigned int *) 0x400FE000;
 unsigned int *CORE = (unsigned int *) 0xE000E000;
 
 #define RCGC2_PA 0x00000001
 #define RCGC2_PB 0x00000002
+#define RCGC2_PC 0x00000004
 #define UNLOCK 0x4c4f434b
+#define MAXTOUCH 500
 
 void run(void);
 void toggleBtn(struct BtnData *btn);
 void initPorts(void);
 void initSSI(void);
 void computeTouch(unsigned int, unsigned int);
-
+void setLED(unsigned short color, bool on);
 
 
 struct BtnData btn1, btn2, btn3;
-int i, current, touchItems;
+int i, current, touchItems, tail;
 bool startTouch;
-unsigned int xcord[1000], ycord[1000];
+unsigned int xcord[MAXTOUCH], ycord[MAXTOUCH];
+
+
+void setLED(unsigned short color, bool on){
+	if(on){
+		switch(color){
+			case red: 
+				PC[0x40/4] = 0x0 << 4;
+				break;
+			case yellow: 
+				PC[0x80/4] = 0x0 << 5;
+				break;
+			case green: 
+				PC[0x100/4] = 0x0 << 6;
+				break;
+			default: break;
+				
+		}
+	}else{
+		switch(color){
+			case red: 
+				PC[0x40/4] = 0x1 << 4;
+				break;
+			case yellow: 
+				PC[0x80/4] = 0x1 << 5;
+				break;
+			case green: 
+				PC[0x100/4] = 0x1 << 6;
+				break;
+			default: {}
+		}		
+	}
+}
 
 
 void initBtn(void){
@@ -44,22 +79,22 @@ void initBtn(void){
 	draw_rectangle(btn3);
 	
 	startTouch = false;
+	current = 0;
 }
 
 void toggleBtn(struct BtnData *btn){
-	if(btn->on){ //if button is currently on, only show border of button
+	if(btn->on){ //if button is currently on, only show border of button, want to turn off
 		struct BtnData temp = *btn;
 		temp.x_begin += 10; temp.x_end -= 10; temp.y_begin += 10; 
 		temp.y_end -= 10;	temp.color = black;
-		
+		setLED(btn->color, false);
 		btn->on=false;
 		draw_rectangle(temp);
-	}else{ //if button is currently off, fill in
+	}else{ //if button is currently off, turn on, fill in
+		setLED(btn->color, true);
 		draw_rectangle(*btn);
 		btn->on = true;
 	}
-	
-	//******toggle led too *******
 }
 
 
@@ -67,7 +102,7 @@ void toggleBtn(struct BtnData *btn){
 void initPorts(void){
 	
 	SYSCTL[0x61C/4] = 0x1; //RCGCSSI enable SSI0 clock
-	SYSCTL[0x108/4] |= RCGC2_PA | RCGC2_PB;
+	SYSCTL[0x108/4] |= RCGC2_PA | RCGC2_PB | RCGC2_PC;
 	
 	PA[0x420/4] = 0x3C; //enable alt function for pins 2-5
 	PA[0x52c/4] = 0x222200; //SSI function pin 2-5
@@ -79,8 +114,13 @@ void initPorts(void){
 	
 	PB[0x180/4] = 0x60; //pin 5,6 high 
 	
+	PC[0x420/4] = 0x00; //disable at functions for pc
+	PC[0x400/4] = 0x70; //pin 4,5,6 output
+	PC[0x51c/4] = 0x70; //enable pins 4,5,6
+	
+	
 	CORE[0x100/4] = 0x2; //enable interrupt for port B
-	PB[0x404/4] = 0x0; //interrupt on edge
+	PB[0x404/4] = 0x4; //interrupt on level
 	PB[0x408/4] = 0x0; //disable both edges
 	PB[0x40c/4] = 0x0; //falling edge
 	PB[0x410/4] = 0x4; //enable interrupt for pin 2
@@ -89,13 +129,13 @@ void initPorts(void){
 
 void GPIOB_Handler(void){
 	PB[0x410/4] = 0x0; //mask pin 2
-	PB[0x41c/4] = 0x4; //acknowlege pin 2 interrupt
 	xcord[current] = get_touch_x();
 	ycord[current] = get_touch_y();
 	current++;
-	if(touchItems<1000) touchItems++;
-	if(current >= 1000) current = 0;
+	current %= MAXTOUCH;
+	if(touchItems<MAXTOUCH) touchItems++;
 	startTouch = true;
+	PB[0x41c/4] = 0x4; //acknowlege pin 2 interrupt
 	PB[0x410/4] = 0x4; //enable pin 2
 }
 
@@ -119,32 +159,36 @@ void initSSI(void){
 
 
 void computeTouch(unsigned int xval, unsigned int yval){
-	if(xval > 0 && xval < 1 && yval > 0 && yval < 1){
-		toggleBtn(&btn1);
-	}
-	if(xval > 0 && xval < 1 && yval > 0 && yval < 1){
-		toggleBtn(&btn2);
-	}
-	if(xval > 0 && xval < 1 && yval > 0 && yval < 1){
-		toggleBtn(&btn3);
+	if(xval > 750 && xval < 3250){
+		if(yval > 400 && yval < 1400){
+			toggleBtn(&btn1);
+		}
+		else if(yval > 1400 && yval < 2500){
+			toggleBtn(&btn2);
+		}
+		else if(yval > 2500 && yval < 3550){
+			toggleBtn(&btn3);
+		}
 	}
 }
 
 
 
 void run(void){
-	unsigned xval, yval;
+	unsigned int xval, yval;
+	xval = yval = 0;
 	while(1){
 		while(!startTouch); //wait until a touch has started
-		while(PB[0x10/4] >> 2 == 1); //wait until touch is done
+		while(PB[0x10/4] >> 2 == 0); //wait until touch is done
 		startTouch= false;
-		current = touchItems = 0;
 		for(i = 0; i<touchItems; i++){
 			xval += xcord[i];
 			yval += ycord[i];
 		}
 		xval /= touchItems;
 		yval /= touchItems;
+		current = touchItems = 0;
+
 		computeTouch(xval, yval);
 	}
 	//toggleBtn(&btn1);
