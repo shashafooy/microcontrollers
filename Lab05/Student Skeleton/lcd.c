@@ -179,7 +179,7 @@ unsigned int get_touch_x(void){
 	int garbage;
 
 	PB_lcd[0x180/4] = 0x40; //100 0000 LCD chip 1, touch chip 0
-	while(SSI0_lcd[0xc/4] >> 2 == 1); //wait until rx empty
+	while(SSI0_lcd[0xc/4] >> 2 == 1) garbage = SSI0_lcd[0x8/4]; //garbage //wait until rx empty
 	
 	PB_lcd[0x4/4] = 0x0; //cx cmd
 	SSI0_lcd[0x8/4] = 0xD0; //cmd: get x 101
@@ -207,7 +207,7 @@ unsigned int get_touch_y(void){
 	int garbage;
 	
 	PB_lcd[0x180/4] = 0x40; //100 0000 LCD chip 1, touch chip 0
-	while(SSI0_lcd[0xc/4] >> 2 == 1); //wait until rx empty
+	while(SSI0_lcd[0xc/4] >> 2 == 1)garbage = SSI0_lcd[0x8/4];  //wait until rx empty
 	
 	//tx cmd
 	PB_lcd[0x4/4] = 0x0; //cx cmd
