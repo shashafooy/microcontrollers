@@ -10,9 +10,9 @@ unsigned char *CORE_INIT = (unsigned char *) 0xE000E000;
 
 void ADCInit(void){
 	//set sysclk to 80MHz
-	SYSCTL->RCC2 |= 0x1 << 31; //use RCC2	
-	SYSCTL->RCC2 |= 0x1 << 11; //use bypass pll
 	SYSCTL->RCC = (SYSCTL->RCC & ~0x7c0) + 0x540; //set XTAL to 0x15 16MHz
+	SYSCTL->RCC2 |= 0x1 << 31; //use RCC2	******used to be <<31*****
+	SYSCTL->RCC2 |= 0x1 << 11; //use bypass pll
 	SYSCTL->RCC2 &= ~0x70; //clear OSCSRC2, use main oscillator
   SYSCTL->RCC2 &= ~0x2000; //clear	PWRDN2
 	SYSCTL->RCC2 |= 0x40000000; //DIV400 = 1
@@ -35,28 +35,45 @@ void ADCInit(void){
 	ADC0->SSCTL0 = 0x6; //0b1110, set interrupt for sample sequence
 	ADC0->IM = 0x1; //enable interrupt for sequencer0
 	ADC0->ACTSS = 0x1; //enable ADC0   use
-	NVIC->ICPR[0x0/4] |= ADC0SS0_IRQn; //use ADC0 sequencer0 interrupt
-
-	/*Wide Timer 0 init*/
-	SYSCTL->RCGCWTIMER = 0x1; //use GPTimer 0
+	//NVIC->ICPR[0x0/4] |= ADC0SS0_IRQn; //use ADC0 sequencer0 interrupt
+	NVIC_EnableIRQ(ADC0SS0_IRQn);
+	
+	/*Wide Timers init*/
+	SYSCTL->RCGCWTIMER = 0x7; //use GPWTimer 0,1,2
+	//Wtimer0 for adc
 	WTIMER0->CTL = 0x0; //disable timer
 	WTIMER0->CTL |= 0x1 << 5; //enable trigger for ADC
 	WTIMER0->CFG = 0x4; //32 bit wide
 	WTIMER0->TAMR = 0x2; //periodic
 	WTIMER0->TAILR = 0x270ff; // (load+1)/80MHz=0.002
 	WTIMER0->CTL |= 0x1; //enable timer
+	//WTimer1 to update DAC
+	WTIMER1->CTL = 0x0;
+	WTIMER1->IMR |= 0x1; //enable interrupt
+	NVIC_EnableIRQ(WTIMER1A_IRQn);
+	WTIMER1->CFG = 0x4; //32bit wide
+	WTIMER1->TAMR = 0x2; //periodic
+	WTIMER1->TAILR = 0x26259FF; //(load+1)/80MHz=0.5
+	WTIMER1->CTL |= 0x1; //enable timer
+	//WTimer2 for frequency
+	WTIMER2->CTL = 0x0;
+	WTIMER2->IMR |= 0x1; //enable interrupt
+	NVIC_EnableIRQ(WTIMER2A_IRQn);
+	WTIMER2->CFG = 0x4; //32bit wide
+	WTIMER2->TAMR = 0x2; //periodic
+
+	
+	
+	
 }
 
 void I2CInit(void){
-	
+	//PB2 clk PB3 data
 	SYSCTL->RCGCI2C = 0x1;
 	SYSCTL->RCGCGPIO |= 0x2;
 	GPIOB->AFSEL = 0xC;
-	GPIOB->ODR = 0xC; //i2c open drain
+	GPIOB->ODR = 0x8; //i2c open drain, only set data line
 	GPIOB->PCTL = 0x3300; //AF i2c
 	I2C0->MCR = 0x10; //initialize master
-	I2C0->MCR = 0x3; //TPR = (system clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1 TPR = 3;
-	
-	
-	
+	I2C0->MTPR = 0x9; //TPR = (system clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1 TPR = 9;
 }
