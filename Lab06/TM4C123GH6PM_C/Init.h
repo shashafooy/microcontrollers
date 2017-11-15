@@ -7,8 +7,6 @@
 #define RCGC2B 
 
 
-void GPIOInit(void);
-
 void ADCInit(void);
 
 void I2CInit(void);

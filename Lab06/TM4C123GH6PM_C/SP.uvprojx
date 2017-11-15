@@ -395,6 +395,11 @@
               <FileType>1</FileType>
               <FilePath>.\init.c</FilePath>
             </File>
+            <File>
+              <FileName>REG.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\REG.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
