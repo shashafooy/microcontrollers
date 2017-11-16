@@ -8,7 +8,7 @@
 
 
 void ADCInit(void);
-
+void timerInit(void);
 void I2CInit(void);
 
 #endif

@@ -2,7 +2,7 @@
 #include "Init.h"
 
 volatile unsigned int Voltage;
-#define SINUSOID_MAX 40;
+unsigned int SINUSOID_MAX = 40;
 
 void I2C_12bit(unsigned short data);
 void ADC0SS0_Handler(void);
@@ -12,21 +12,23 @@ void WTIMER1A_Handler(void);
 
 
 unsigned short SINUSOID[] = {
-	0x800,0x940,0xa78,0xba1,0xcb3,0xda7,0xe78,0xf20,
-0xf9b,0xfe6,0xfff,0xfe6,0xf9b,0xf20,0xe78,0xda7,
-0xcb3,0xba1,0xa78,0x940,0x800,0x6bf,0x587,0x45e,
-0x34c,0x258,0x187,0xdf,0x64,0x19,0x0,0x19,
-0x64,0xdf,0x187,0x258,0x34c,0x45e,0x587,0x6bf	
-	};
+0x1f4,0x242,0x28f,0x2d7,0x31a,0x356,0x389,0x3b2,
+0x3d0,0x3e2,0x3e8,0x3e2,0x3d0,0x3b2,0x389,0x356,
+0x31a,0x2d7,0x28f,0x242,0x1f4,0x1a6,0x159,0x111,
+0xce,0x92,0x5f,0x36,0x18,0x6,0x0,0x6,
+0x18,0x36,0x5f,0x92,0xce,0x111,0x159,0x1a6
+};
 unsigned int currSine, numVoltage;
 
 //Average voltage to set Timer 2
 void WTIMER1A_Handler(void){
 	unsigned int load;
+	unsigned int freq;
 	WTIMER1->ICR = 0x1; //ack interrupt
 	Voltage /= numVoltage;
 	numVoltage = 0;
-	load = (int)(80000000.0/(100.0 + (double)Voltage*900.0/4095.0) - 1.0);
+	freq = (int)(100.0 + (double)Voltage*900.0/4095.0)*SINUSOID_MAX;
+	load = (int)(80000000.0/(freq));
 	WTIMER2->CTL = 0x0; //disable timer2
 	WTIMER2->TAILR = load;//80000000*(1/freq) - 1;
 	WTIMER2->CTL = 0x1;
@@ -45,15 +47,17 @@ void ADC0SS0_Handler(void){
 	numVoltage++;
 }
 
-
+//14 96 97
 void I2C_12bit(unsigned short data){
 	//DAC address is 0x62
-	while (I2C0->MCS & 0x1); //poll busy
-	I2C0->MSA = (0x62 << 1) + 0x0; //slave address and tx
-	I2C0->MDR = (char)(data >> 8); //8-11
+//	unsigned char temp;
+	//while (I2C0->MCS & 0x1); //poll busy
+	I2C0->MSA = (0x62 << 1); //slave address and tx
+	I2C0->MDR = (unsigned char)((data >> 8) & 0x0F); //8-11
+	//temp = data >> 8;
 	I2C0->MCS = 0x3; //set start enable bits
 	while (I2C0->MCS & 0x1); //poll busy
-	I2C0->MDR = (char) data; //0-7
+	I2C0->MDR = (unsigned char) data; //0-7
 	I2C0->MCS = 0x5; //set stop enable bits
 	while ((I2C0->MCS & 0x1) == 0x1); 
 }
@@ -63,6 +67,7 @@ int main(void)
 	currSine=numVoltage=0;
 	ADCInit();
 	I2CInit();
-	//your code here.
+	timerInit();
+	
 	while(1);
 }
