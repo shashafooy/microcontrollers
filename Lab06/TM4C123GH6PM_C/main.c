@@ -3,6 +3,7 @@
 
 volatile unsigned int Voltage;
 unsigned int SINUSOID_MAX = 40;
+volatile int I2C_Begin;
 
 void I2C_12bit(unsigned short data);
 void ADC0SS0_Handler(void);
@@ -27,8 +28,8 @@ void WTIMER1A_Handler(void){
 	WTIMER1->ICR = 0x1; //ack interrupt
 	Voltage /= numVoltage;
 	numVoltage = 0;
-	freq = (int)(100.0 + (double)Voltage*900.0/4095.0)*SINUSOID_MAX;
-	load = (int)(80000000.0/(freq));
+	freq = (int)(100.0 + (double)Voltage*900.0/4095.0);
+	load = (int)(80000000.0/(freq * SINUSOID_MAX));
 	WTIMER2->CTL = 0x0; //disable timer2
 	WTIMER2->TAILR = load;//80000000*(1/freq) - 1;
 	WTIMER2->CTL = 0x1;
@@ -52,19 +53,23 @@ void I2C_12bit(unsigned short data){
 	//DAC address is 0x62
 //	unsigned char temp;
 	//while (I2C0->MCS & 0x1); //poll busy
-	I2C0->MSA = (0x62 << 1); //slave address and tx
 	I2C0->MDR = (unsigned char)((data >> 8) & 0x0F); //8-11
-	//temp = data >> 8;
-	I2C0->MCS = 0x3; //set start enable bits
+	if(!I2C_Begin){ //have not sent first bit
+		I2C0->MSA = (0x62 << 1); //slave address and tx
+		I2C0->MCS = 0x3; //set start enable bits
+		I2C_Begin = 1;
+	}else{
+		I2C0->MCS = 0x1; //set enable bits
+	}
 	while (I2C0->MCS & 0x1); //poll busy
 	I2C0->MDR = (unsigned char) data; //0-7
-	I2C0->MCS = 0x5; //set stop enable bits
+	I2C0->MCS = 0x1; //set enable bits
 	while ((I2C0->MCS & 0x1) == 0x1); 
 }
 
 int main(void)
 {
-	currSine=numVoltage=0;
+	currSine=numVoltage=I2C_Begin=0;
 	ADCInit();
 	I2CInit();
 	timerInit();

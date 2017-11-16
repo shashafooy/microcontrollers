@@ -80,5 +80,5 @@ void I2CInit(void){
 	GPIOB->PCTL = 0x3300; //AF i2c
 	GPIOB->DEN = 0xC;
 	I2C0->MCR = 0x10; //initialize master
-	I2C0->MTPR = 0x1; //TPR = (system clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1 TPR = 9;
+	I2C0->MTPR = 0x1; //TPR = (system clock/(2*(SCL_LP + SCL_HP)*SCL_CLK))-1 TPR = 1;
 }
