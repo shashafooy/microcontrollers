@@ -1,0 +1,12 @@
+1. Design each square mode
+	water, ship, hit, miss, red outline(for selection)
+2. 4x 2D array to hold p1 ships, p1 hit map, p2 ships, p2 hit map
+3. confirm button, some indicator(green header?) to indicate player turn
+4. Large W or L overlay screen for win/lose
+5. Place ships
+	say what size ship needs to be placed
+	select 2 squares, confirm valid size (do not highlight second square if not valid)
+6. Set up 2nd SSI
+	copy lcd.h
+	interrupt priority?
+7. create functions for outlines/circle

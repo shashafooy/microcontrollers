@@ -1,0 +1,18 @@
+,Pin assignment,,
+Name,TM4c,LCD,wire color
+5V power input,VBUS,2,RED
+Ground,GND,6,Black
+Touch Panel Interrupt,PB2,11,Grey
+Key 1,,12,
+Reset,3.3V,13,Orange
+LCD instruction/data select,PB0,15,Purple
+KEY 2,,16,
+Key 3,,18,
+SPI input LCD/Touch,LCD:PA5  Touch: ,19,Yellow
+SPI output touch,PA4,21,blue
+SPI clock LCD/Touch,LCD: PA2  Touch:  ,23,Orange
+LCD Chip select,PB6 SSIFss,24,Yellow
+Touch panel chip select,PB5 Fss,26,Green
+,,,
+,,,
+,spo,,
