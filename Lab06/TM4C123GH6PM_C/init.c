@@ -1,20 +1,14 @@
 #include "Init.h"
 #include "REG.h"
-
-#include "RTE_Components.h"             // Component selection
-
-
 unsigned int *CORE_INIT = (unsigned int *) 0xE000E000;
-
-
 
 void ADCInit(void){
 	//set sysclk to 80MHz
 	SYSCTL->RCC = (SYSCTL->RCC & ~0x7c0) + 0x540; //set XTAL to 0x15 16MHz
-	SYSCTL->RCC2 |= 0x80000000; //use RCC2	******used to be <<31*****
+	SYSCTL->RCC2 |= 0x80000000; //use RCC2
 	SYSCTL->RCC2 |= 0x1 << 11; //use bypass pll
 	SYSCTL->RCC2 &= ~0x70; //clear OSCSRC2, use main oscillator
-  SYSCTL->RCC2 &= ~0x2000; //clear	PWRDN2
+	SYSCTL->RCC2 &= ~0x2000; //clear	PWRDN2
 	SYSCTL->RCC2 |= 0x40000000; //DIV400 = 1
 	SYSCTL->RCC2 = (SYSCTL->RCC2 & ~0x1fc00000) + (0x4<<22);
 	while((SYSCTL->RIS & 0x40) == 0); //wait for PLLRIS bit
@@ -35,7 +29,6 @@ void ADCInit(void){
 	ADC0->SSCTL0 = 0x6; //0b1110, set interrupt for sample sequence
 	ADC0->IM = 0x1; //enable interrupt for sequencer0
 	ADC0->ACTSS = 0x1; //enable ADC0   use
-	//NVIC->ICPR[0x0/4] |= ADC0SS0_IRQn; //use ADC0 sequencer0 interrupt
 	NVIC_EnableIRQ(ADC0SS0_IRQn);
 	CORE_INIT[0x40c/4] = 0x0 << 21; //set intpriority to 3
 	
@@ -63,10 +56,9 @@ void timerInit(void){
 	WTIMER1->CTL |= 0x1; //enable timer
 	
 	//WTimer2 for frequency
-	WTIMER2->CTL = 0x0;
+	WTIMER2->CTL = 0x0; //disable
 	WTIMER2->IMR |= 0x1; //enable interrupt
 	NVIC_EnableIRQ(WTIMER2A_IRQn);
-	
 	WTIMER2->CFG = 0x4; //32bit wide
 	WTIMER2->TAMR = 0x2; //periodic
 }
