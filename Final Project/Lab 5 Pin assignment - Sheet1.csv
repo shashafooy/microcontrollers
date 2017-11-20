@@ -1,18 +1,15 @@
-,Pin assignment,,
-Name,TM4c,LCD,wire color
-5V power input,VBUS,2,RED
-Ground,GND,6,Black
-Touch Panel Interrupt,PB2,11,Grey
-Key 1,,12,
-Reset,3.3V,13,Orange
-LCD instruction/data select,PB0,15,Purple
-KEY 2,,16,
-Key 3,,18,
-SPI input LCD/Touch,LCD:PA5  Touch: ,19,Yellow
-SPI output touch,PA4,21,blue
-SPI clock LCD/Touch,LCD: PA2  Touch:  ,23,Orange
-LCD Chip select,PB6 SSIFss,24,Yellow
-Touch panel chip select,PB5 Fss,26,Green
-,,,
-,,,
-,spo,,
+,Pin assignment,,,,,Pin assignment,,
+Name,TM4c,LCD0,wire color,,Name,TM4c,LCD1,wire color
+5V power input,VBUS,2,RED,,5V power input,VBUS,2,
+Ground,GND,6,Black,,Ground,GND,6,
+Touch Panel Interrupt,PB2,11,Grey,,Touch Panel Interrupt,PB3,11,
+Key 1,,12,,,Key 1,,12,
+Reset,3.3V,13,Orange,,Reset,3.3V,13,
+LCD instruction/data select,PB0,15,Purple,,LCD instruction/data select,PB0,15,
+KEY 2,,16,,,KEY 2,,16,
+Key 3,,18,,,Key 3,,18,
+SPI input LCD/Touch,PA5 ,19,Yellow,,SPI input LCD/Touch,PA5 ,19,
+SPI output touch,PA4,21,blue,,SPI output touch,PA4,21,
+SPI clock LCD/Touch,PA2   ,23,Orange,,SPI clock LCD/Touch,PA2   ,23,
+LCD Chip select,PB6 SSIFss,24,Yellow,,LCD Chip select,PB4 SSIFss,24,
+Touch panel chip select,PB7 Fss,26,Green,,Touch panel chip select,PB5 Fss,26,

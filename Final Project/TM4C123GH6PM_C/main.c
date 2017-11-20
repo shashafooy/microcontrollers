@@ -1,16 +1,7 @@
 #include "lcd.h"
-#include "lcd_configuration_test.h" //You can remove this line after you've removed the call to test_configuartion(unsigned int, unsigned char*, unsigned int*)
 #include "Shapes.h"
+#include "Battleship.h"
 #include <stdbool.h>
-
-
-
-unsigned int *PA = (unsigned int *) 0x40004000;
-unsigned int *PB = (unsigned int *) 0x40005000;
-unsigned int *PC = (unsigned int *) 0x40006000;
-unsigned int *SSI0 = (unsigned int *) 0x40008000;
-unsigned int *SYSCTL = (unsigned int *) 0x400FE000;
-unsigned int *CORE = (unsigned int *) 0xE000E000;
 
 #define RCGC2_PA 0x00000001
 #define RCGC2_PB 0x00000002
@@ -19,51 +10,17 @@ unsigned int *CORE = (unsigned int *) 0xE000E000;
 #define MAXTOUCH 50
 
 void run(void);
-void toggleBtn(struct BtnData *btn);
+void toggleBtn( BtnData *btn);
 void initPorts(void);
 void initSSI(void);
 void computeTouch(unsigned int, unsigned int);
-void setLED(unsigned short color, bool on);
 
-struct BtnData btn1, btn2, btn3;
+BtnData btn1, btn2, btn3;
 int i, tail;
 int doneTouch;
 unsigned int xcord[MAXTOUCH], ycord[MAXTOUCH];
-unsigned int xval, yval;
+unsigned int p1xval, p1yval, p2xval, p2yval;
 unsigned int current, touchItems;
-
-
-void setLED(unsigned short color, bool on){
-	if(on){
-		switch(color){
-			case red: 
-				PC[0x40/4] = 0x0 << 4;
-				break;
-			case yellow: 
-				PC[0x80/4] = 0x0 << 5;
-				break;
-			case green: 
-				PC[0x100/4] = 0x0 << 6;
-				break;
-			default: break;
-				
-		}
-	}else{
-		switch(color){
-			case red: 
-				PC[0x40/4] = 0x1 << 4;
-				break;
-			case yellow: 
-				PC[0x80/4] = 0x1 << 5;
-				break;
-			case green: 
-				PC[0x100/4] = 0x1 << 6;
-				break;
-			default: {}
-		}		
-	}
-}
-
 
 void initBtn(void){
 	btn1.x_begin = 40; btn1.x_end = 200; btn1.y_begin = 20; 
@@ -75,95 +32,91 @@ void initBtn(void){
 	btn3.x_begin = 40; btn3.x_end = 200; btn3.y_begin = 220; 
 	btn3.y_end = 300;	btn3.color = green; btn3.on = true;
 	
-	draw_rectangle(btn1);
-	draw_rectangle(btn2);
-	draw_rectangle(btn3);
+	draw_rectangle(btn1,0);
+	draw_rectangle(btn2,0);
+	draw_rectangle(btn3,0);
 	
 	doneTouch = false;
 }
 
-void toggleBtn(struct BtnData *btn){
-	if(btn->on){ //if button is currently on, only show border of button, want to turn off
-		struct BtnData temp = *btn;
-		temp.x_begin += 10; temp.x_end -= 10; temp.y_begin += 10; 
-		temp.y_end -= 10;	temp.color = black;
-		setLED(btn->color, false);
-		btn->on=false;
-		draw_rectangle(temp);
-	}else{ //if button is currently off, turn on, fill in
-		setLED(btn->color, true);
-		draw_rectangle(*btn);
-		btn->on = true;
-	}
-}
-
-
-
 void initPorts(void){
 	
-	SYSCTL[0x61C/4] = 0x1; //RCGCSSI enable SSI0 clock
-	SYSCTL[0x108/4] |= RCGC2_PA | RCGC2_PB | RCGC2_PC;
+	SYSCTL->RCGCSSI = 0x1; //RCGCSSI enable SSI0 clock
+	SYSCTL->RCGC2 |= RCGC2_PA | RCGC2_PB | RCGC2_PC;
 	
-	PA[0x420/4] = 0x3C; //enable alt function for pins 2-5
-	PA[0x52c/4] = 0x222200; //SSI function pin 2-5
-	PA[0x51c/4] = 0x3C; //Digital enable pin 2-5
+	GPIOA->AFSEL = 0x3C; //enable alt function for pins 2-5
+	GPIOA->PCTL = 0x222200; //SSI function pin 2-5
+	GPIOA->DEN = 0x3C; //Digital enable pin 2-5
 	
-	PB[0x420/4] = 0x00; //disable AF
-	PB[0x400/4] = 0x61; //pin 0,5,6 output, pin 2 input
-	PB[0x51c/4] = 0x65; //enable pin 0,2,5,6
+	GPIOB->AFSEL = 0x00; //disable AF
+	GPIOB->DIR = 0xF1; //pin 0,4,5,6,7 output, pin 2,3 input
+	GPIOB->DEN = 0xFD; //enable pin 0,2,3,4,5,6,7
 	
-	PB[0x180/4] = 0x60; //pin 5,6 high 
+	GPIOB->DATA |= 0xF0; //pin 4,5,6,7 high 
 	
-	PC[0x420/4] = 0x00; //disable at functions for pc
-	PC[0x400/4] = 0x70; //pin 4,5,6 output
-	PC[0x51c/4] = 0x70; //enable pins 4,5,6
+	GPIOC->AFSEL = 0x00; //disable at functions for pc
+	GPIOC->DIR = 0x70; //pin 4,5,6 output
+	GPIOC->DEN = 0x70; //enable pins 4,5,6
 	
-	
-	CORE[0x100/4] = 0x2; //enable interrupt for port B
-	PB[0x404/4] = 0x0; //interrupt on edge
-	PB[0x408/4] = 0x0; //disable both edges
-	PB[0x40c/4] = 0x0; //falling edge
-	PB[0x410/4] = 0x4; //enable interrupt for pin 2
+	NVIC_EnableIRQ(GPIOB_IRQn); //port B interrupt
+	GPIOB->IS= 0x0; //interrupt on edge
+	GPIOB->IBE = 0x0; //disable both edges
+	GPIOB->IEV = 0x0; //falling edge
+	GPIOB->IM = 0xC; //enable interrupt for pin 2,3
 }
 
 
 void GPIOB_Handler(void){
-	PB[0x410/4] = 0x0; //mask pin 2
-	current = touchItems = xval = yval = 0;
-	while(PB[0x10/4] >> 2 == 0){ //wait until touch is done
-		
-		xcord[current] = get_touch_x();
-		ycord[current] = get_touch_y();
-		current++;
-		current %= MAXTOUCH;
-		if(touchItems<MAXTOUCH) touchItems++;
+	GPIOB->IM = 0x0; //mask pin 2,3
+	current = touchItems = p1xval = p1yval = p2xval = p2yval= 0;
+	if(GPIOB->MIS & 0x4){				//LCD0 interrupt
+		while((GPIOB->DATA &~0x4) >> 2 == 0){ //wait until touch is done
+			xcord[current] = get_touch_x(0);
+			ycord[current] = get_touch_y(0);
+			current++;
+			current %= MAXTOUCH;
+			if(touchItems<MAXTOUCH) touchItems++;
+		}
+		for(i = 0; i<touchItems; i++){
+			p1xval += xcord[i];
+			p1yval += ycord[i];
+		}
+		p1xval /= touchItems;
+		p1yval /= touchItems;
+		GPIOB->ICR = 0x4; //acknowlege pin 2 interrupt
+	}else{										//LCD1 Interrupt
+		while((GPIOB->DATA &~0x8) >> 3 == 0){ //wait until touch is done
+			xcord[current] = get_touch_x(1);
+			ycord[current] = get_touch_y(1);
+			current++;
+			current %= MAXTOUCH;
+			if(touchItems<MAXTOUCH) touchItems++;
+		}
+		for(i = 0; i<touchItems; i++){
+			p2xval += xcord[i];
+			p2yval += ycord[i];
+		}
+		p2xval /= touchItems;
+		p2yval /= touchItems;
+		GPIOB->ICR = 0x8; //acknowlege pin 3 interrupt	
 	}
-	for(i = 0; i<touchItems; i++){
-		xval += xcord[i];
-		yval += ycord[i];
-	}
-	xval /= (touchItems);
-	yval /= (touchItems);
 	doneTouch = true;
-	PB[0x41c/4] = 0x4; //acknowlege pin 2 interrupt
-	PB[0x410/4] = 0x4; //enable pin 2
+	GPIOB->IM |= 0xC; //endable pin 2,3
 }
 
 void initSSI(void){
 	
-	SSI0[0x4/4] &= 0xD; //disable SSIO, SSICR1 disable SSE bit (2nd)
-	SSI0[0x4/4] = 0x00000000; //master mode
-	SSI0[0xFC8/4] = 0x0; //use sysclock clock
+	SSI0->CR1 &= ~0x2; //disable SSIO, SSICR1 disable SSE bit (2nd)
+	SSI0->CR1 = 0x00000000; //master mode
+	SSI0->CC = 0x0; //use sysclock clock
 	//SSI clock needs to be 2MHz
 	//SSIClk = SysClk / (CPSDVSR * (1 + SCR))
 	//2Mhz = 16MHz/ (CPSDVSR *(1+1))   CPSDVSR= 4
-	SSI0[0x10/4] = 0x4; //CPSDVSR = 4 
-	SSI0[0x0] = 0x1C7; //SCR = 1, SPH = SPO = 1, DSS= 8 bits
-	SSI0[0x4/4] |= 0x2; //enable SSIO
-	
-	
-	
-	
+	//faster? 6.35MHz max? SSIClk=4MHz  CPSDVSR=2  SCR=1
+	//SSI0->CPSR = 0x4; //CPSDVSR = 4 
+	SSI0->CPSR = 0x2;
+	SSI0->CR0 = 0x1C7; //SCR = 1, SPH = SPO = 1, DSS= 8 bits
+	SSI0->CR1 |= 0x2; //enable SSIO
 }
 
 
@@ -182,15 +135,24 @@ void computeTouch(unsigned int xval, unsigned int yval){
 	}
 }
 
-
+void toggleBtn( BtnData *btn){
+	if(btn->on){ //if button is currently on, only show border of button, want to turn off
+		BtnData temp = *btn;
+		temp.x_begin += 10; temp.x_end -= 10; temp.y_begin += 10; 
+		temp.y_end -= 10;	temp.color = black;
+		btn->on=false;
+		draw_rectangle(temp,0);
+	}else{ //if button is currently off, turn on, fill in
+		draw_rectangle(*btn,0);
+		btn->on = true;
+	}
+}
 
 void run(void){
-
-	xval = yval = 0;
 	while(1){
 		while(!doneTouch); //wait until a touch has started
 		doneTouch= false;
-		computeTouch(xval, yval);
+		//computeTouch(xval, yval);
 	}
 	//toggleBtn(&btn1);
 	//toggleBtn(&btn1);
@@ -212,11 +174,12 @@ int main(void)
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//Call your initialization functions here
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	current = touchItems = p1xval = p1yval = p2xval = p2yval= 0;
 	
 	initPorts();
 	initSSI();
 	lcd_init();
-	clear_lcd(black);
+	clear_lcd(black,0);
 	initBtn();
 	run();
 	//This function tests the configuration of your GPIO port and your SSI/SPI module. 

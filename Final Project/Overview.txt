@@ -10,3 +10,5 @@
 	copy lcd.h
 	interrupt priority?
 7. create functions for outlines/circle
+
+Might want a faster clock for logic, 80MHz? will need to configure divisor for ssi (~6.35MHz max)

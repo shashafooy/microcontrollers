@@ -1,6 +1,8 @@
 #ifndef LCD_C 
 #define LCD_C
 
+#include "TM4C123.h"                    // Device header
+
 //definitions of useful colors. 
 // page 238 of the data sheet.
 #define white          0xFFFF
@@ -19,23 +21,17 @@
 
 
 //This function configures the LCD screen for using. 
-//
-//It assumes that there exist write_dat and write_cmd functions that function properly and that peripherals are configured and enabled.  
 void lcd_init(void);
 
 //This function writes data to the LCD screen
-//
-//It assumes that peripherals are configured configured and enabled
-void write_dat(unsigned char data);
-void write_dat2(unsigned short data);
+void write_dat(unsigned char data, int lcdNum);
+void write_dat2(unsigned short data, int lcdNum);
 
 //This function writes a command to the LCD screen
-//
-//It assumes that peripherals are configured configured and enabled
-void write_cmd(unsigned char command);
+void write_cmd(unsigned char command, int lcdNum);
 
-unsigned int get_touch_x(void);
-unsigned int get_touch_y(void);
+unsigned int get_touch_x(int lcdNum);
+unsigned int get_touch_y(int lcdNum);
 
 void waitBusy(void);
 
