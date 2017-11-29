@@ -51,3 +51,72 @@ void draw_rectangle(BtnData btn, int ledNum){
 	}
 	
 }
+
+void draw_circle(BtnData startCircle, int ledNum) {
+	unsigned int diff, mid;
+	unsigned int i, j, rs;
+	signed int xs, ys;
+	unsigned int radius;
+	
+	LCD_SetPage(startCircle.y_begin, startCircle.y_end, ledNum);
+	LCD_setColumn(startCircle.x_begin, startCircle.x_end, ledNum);
+	
+	write_cmd(0x2c, ledNum);
+	
+	//area	= (startCircle.x_end-startCircle.x_begin+1)*(startCircle.y_end-startCircle.y_begin+1); //area of the square region the circle will be drawn in
+	
+	diff = startCircle.x_end - startCircle.x_begin; //Difference between end point and beginning point
+	radius = diff / 2.0; //get value of half of the difference
+	mid = startCircle.x_begin + radius; //the center point
+	
+	rs = radius * radius;
+	
+	for(i = startCircle.x_begin; i< startCircle.x_end; i++){
+			xs = (i - mid) * (i - mid);
+				for(j = startCircle.y_begin; j< startCircle.y_end; j++){
+					ys = (j-mid) * (j-mid);
+					if(xs + ys < rs) { write_dat(startCircle.color, ledNum); }
+				}
+			}	
+}
+
+void draw_l(int ledNum){
+	BtnData loser;
+	
+	loser.y_begin = 60; loser.y_end = 300;
+	loser.x_begin = 80; loser.x_end = 100;
+	loser.color = red;
+	
+	draw_rectangle(loser, ledNum); //draw left part of 'L'
+	
+	loser.y_begin = 280; loser.y_end = 300;
+	loser.x_begin = 80; loser.x_end = 110;
+	
+	draw_rectangle(loser, ledNum); //draw bottom part of 'L'
+}
+
+void draw_w(int ledNum) {
+	BtnData winner;
+	
+	winner.x_begin = 40; winner.x_end = 60;
+	winner.y_begin = 60; winner.y_end = 280;
+	winner.color = green;
+	
+	draw_rectangle(winner, ledNum); //draw left part of 'w'
+	
+	winner.x_begin = 60; winner.x_end = 180;
+	winner.y_begin = 280; winner.y_end = 300;
+	
+	draw_rectangle(winner, ledNum); //draw base of 'w'
+	
+	winner.x_begin = 110; winner.x_end = 130;
+	winner.y_begin = 200; winner.y_end = 280;
+	
+	draw_rectangle(winner, ledNum); //draw middle of 'w'
+	
+	winner.x_begin = 180; winner.x_end = 200;
+	winner.y_begin = 60; winner.y_end = 280;
+	
+	draw_rectangle(winner, ledNum); //draw right part of 'w'
+	
+}
