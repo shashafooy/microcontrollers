@@ -19,8 +19,9 @@ BtnData btn1, btn2, btn3;
 int i, tail;
 int doneTouch;
 unsigned int xcord[MAXTOUCH], ycord[MAXTOUCH];
-unsigned int p1xval, p1yval, p2xval, p2yval;
 unsigned int current, touchItems;
+int p1xval, p1yval, p2xval, p2yval;
+
 
 void initBtn(void){
 	btn1.x_begin = 40; btn1.x_end = 200; btn1.y_begin = 20; 
@@ -68,7 +69,8 @@ void initPorts(void){
 
 void GPIOB_Handler(void){
 	GPIOB->IM = 0x0; //mask pin 2,3
-	current = touchItems = p1xval = p1yval = p2xval = p2yval= 0;
+	current = touchItems = 0;
+	p1xval = p1yval = p2xval = p2yval= 0;
 	if(GPIOB->MIS & 0x4){				//LCD0 interrupt
 		while((GPIOB->DATA &~0x4) >> 2 == 0){ //wait until touch is done
 			xcord[current] = get_touch_x(0);
