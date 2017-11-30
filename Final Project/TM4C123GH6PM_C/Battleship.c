@@ -26,25 +26,25 @@ BtnData shipSquare(int i, int j, squareType status) {
 */
 
 void drawGrid(int lcdNum) {
-	
+	int i,j;
 	BtnData grid;
 	
 	grid.x_begin = 5; grid.x_end = 235;
-	grid.y_begin = 5; grid.y_end = 315;
+	grid.y_begin = 5; grid.y_end = YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5;
 	grid.color = black;
 	
-	for(int i = 0; i < XSIZE+1; i++) {												//draw all of the horizontal gridlines
+	for(i = 0; i < XSIZE+1; i++) {												//draw all of the horizontal gridlines
 		grid.x_end = grid.x_begin + borderWidth;
 		draw_rectangle(grid, lcdNum);
-		grid.x_begin = grid.x_end + shipSize;
+		grid.x_begin = grid.x_end + waterSqSize;
 	}
 	
 	grid.x_begin = 5; grid.x_end = 235;
 	
-	for(int j = 0; j < YSIZE+1; j++) {												//draw all of the vertical gridlines
+	for(j = 0; j < YSIZE+1; j++) {												//draw all of the vertical gridlines
 		grid.y_end = grid.y_begin + borderWidth;
 		draw_rectangle(grid, lcdNum);
-		grid.y_begin = grid.y_end + shipSize;
+		grid.y_begin = grid.y_end + waterSqSize;
 	}
 	
 	
@@ -273,6 +273,8 @@ void start_game(void){
 	initBoard();
 	
 	/*draw example ship size below grid here*/
+	drawGrid(0);
+	drawGrid(1);
 	
 	draw_ship_to_be_placed(p1ShipSize,0);
 	draw_ship_to_be_placed(p2ShipSize,1);
