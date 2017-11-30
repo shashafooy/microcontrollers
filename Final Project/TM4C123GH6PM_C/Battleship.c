@@ -84,6 +84,8 @@ void initBoard(void){
 	int i,j;
 	waterSqSize	= (240 - 10 - borderWidth*(XSIZE+1)) / XSIZE;
 	shipSize = waterSqSize - 5;
+	draw_rectangle(BtnData_new(0,30,0,30,green),0); //these functions are needed to "warm up?" the lcd
+	draw_rectangle(BtnData_new(0,30,0,30,green),1);
 	clear_lcd(blue,0);
 	clear_lcd(blue,1);
 	/*draw grid*/
@@ -104,7 +106,7 @@ BtnData getSquare(int i, int j, squareType a){
 	BtnData temp;
 	switch(a){
 			case water: 
-				return *BtnData_new(5+borderWidth*(i+1)+waterSqSize*i
+				return BtnData_new(5+borderWidth*(i+1)+waterSqSize*i
 					,5+(borderWidth+waterSqSize)*(i+1)
 					,5+borderWidth*(j+1)+waterSqSize*j
 					,5+(borderWidth + waterSqSize)*(j+1)
@@ -116,7 +118,7 @@ BtnData getSquare(int i, int j, squareType a){
 					int sizeDiff = waterSqSize - shipSize;
 					//external border + water between ship and border + border + ship size
 					
-					return *BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
+					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
 						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
 						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
 						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
@@ -129,7 +131,7 @@ BtnData getSquare(int i, int j, squareType a){
 					//functions for x and y location used to allow different number of squares
 					int sizeDiff = waterSqSize - shipSize;
 					
-					return *BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
+					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
 						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
 						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
 						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
@@ -142,7 +144,7 @@ BtnData getSquare(int i, int j, squareType a){
 					
 					int sizeDiff = waterSqSize - shipSize;
 					
-					return *BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
+					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
 						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
 						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
 						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
@@ -154,7 +156,7 @@ BtnData getSquare(int i, int j, squareType a){
 				int sizeDiff = waterSqSize - shipSize;
 					//external border + water between ship and border + border + ship size
 					
-					return *BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
+					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
 						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
 						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
 						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
@@ -247,6 +249,8 @@ void start_game(void){
 	
 	/*draw example ship size below grid here*/
 	
+	draw_ship_to_be_placed(p1ShipSize,0);
+	draw_ship_to_be_placed(p2ShipSize,1);
 	
 	while(1){
 		if(p1_ships_not_placed == 2) p1ShipSize = 2;
@@ -347,8 +351,14 @@ void next_turn(void){
 void end_game(void){
 }
 
-
-
+void draw_ship_to_be_placed(int size, int ledNum){
+	int i;
+	draw_rectangle(BtnData_new(0,120,275,275+shipSize,blue),ledNum);
+		for(i=0; i<3; i++){ //draw ship to be placed
+		BtnData t = BtnData_new(20+shipSize*i + 3*i,20+shipSize*(i+1) + 3*i,275,275+shipSize, grey);
+		draw_rectangle(t,ledNum);
+	}
+}
 
 
 

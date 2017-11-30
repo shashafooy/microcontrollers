@@ -1,10 +1,13 @@
 #include "Shapes.h"
 
 
-BtnData* BtnData_new(int xb, int xe, int yb, int ye, unsigned short color){
-	BtnData* p;
-	p->x_begin = xb; p->x_end = xe; p->y_begin=yb; p->y_end = ye;
-	p->color = color;
+BtnData BtnData_new(int xb, int xe, int yb, int ye, unsigned short color){
+	BtnData p;
+	p.x_begin = xb; 
+	p.x_end = xe;
+	p.y_begin=yb;
+	p.y_end = ye;
+	p.color = color;
 	return p;
 }
 
@@ -46,6 +49,7 @@ void draw_rectangle(BtnData btn, int ledNum){
 	
 	write_cmd(0x2c, ledNum);
 	area	= (btn.x_end-btn.x_begin+1)*(btn.y_end-btn.y_begin+1);
+
 	for(i=0; i<area; i++){
 		write_dat2(btn.color, ledNum);
 	}

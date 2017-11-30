@@ -23,5 +23,6 @@ void end_game(void);
 int getXsquarePressed(int xval);
 int getYsquarePressed(int yval);
 bool tryCreateShip(int tempx, int tempy, int shipSize, int player);
+void draw_ship_to_be_placed(int size, int ledNum);
 
 #endif

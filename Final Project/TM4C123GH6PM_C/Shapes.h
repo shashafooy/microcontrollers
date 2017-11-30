@@ -15,7 +15,7 @@ typedef struct{
 	
 }BtnData;
 
-BtnData* BtnData_new(int xb, int xe, int yb, int ye, unsigned short color);
+BtnData BtnData_new(int xb, int xe, int yb, int ye, unsigned short color);
 void LCD_SetPage(unsigned short Start, unsigned short End, int lcdNum);
 void LCD_setColumn(unsigned short Start, unsigned short End, int lcdNum);
 

@@ -181,9 +181,12 @@ int main(void)
 	initPorts();
 	initSSI();
 	lcd_init();
-	clear_lcd(black,0);
-	initBtn();
-	run();
+	
+	start_game();
+	
+	//clear_lcd(black,0);
+	//initBtn();
+	//run();
 	//This function tests the configuration of your GPIO port and your SSI/SPI module. 
 	//
 	//Pass it the following parameters in the following order

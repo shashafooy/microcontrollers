@@ -2,7 +2,7 @@
 
 //waits for specified lcd to not be busy
 void waitBusy(){
-	while(SSI0->SR >> 2 == 1); 
+	while(SSI0->SR >> 4 == 1); 
 }
 
 
