@@ -68,11 +68,11 @@ void initPorts(void){
 
 
 void GPIOB_Handler(void){
-	GPIOB->IM = 0x0; //mask pin 2,3
 	current = touchItems = 0;
 	p1xval = p1yval = p2xval = p2yval= 0;
 	if(GPIOB->MIS & 0x4){				//LCD0 interrupt
-		while((GPIOB->DATA &~0x4) >> 2 == 0){ //wait until touch is done
+		GPIOB->IM = 0x0; //mask pin 2,3
+		while((GPIOB->DATA &0x4) >> 2 == 0){ //wait until touch is done
 			xcord[current] = get_touch_x(0);
 			ycord[current] = get_touch_y(0);
 			current++;
@@ -87,6 +87,7 @@ void GPIOB_Handler(void){
 		p1yval /= touchItems;
 		GPIOB->ICR = 0x4; //acknowlege pin 2 interrupt
 	}else{										//LCD1 Interrupt
+		GPIOB->IM = 0x0; //mask pin 2,3
 		while((GPIOB->DATA &~0x8) >> 3 == 0){ //wait until touch is done
 			xcord[current] = get_touch_x(1);
 			ycord[current] = get_touch_y(1);

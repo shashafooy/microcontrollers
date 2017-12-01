@@ -55,9 +55,9 @@ void highlightBorder(int i, int j, bool on, int lcdNum) {   //Function to highli
 	BtnData border, currRect;
 	
 	border.x_begin = 5+borderWidth*i+waterSqSize*i;
-	border.x_end = 5+borderWidth*(i+2)+(waterSqSize)*(i+1);
+	border.x_end = 5+(borderWidth*(i+2))+((waterSqSize)*(i+1));
 	border.y_begin = 5+borderWidth*j+waterSqSize*j;
-	border.x_end = 5+borderWidth*(j+2)+(waterSqSize)*(j+1);
+	border.y_end = 5+(borderWidth*(j+2))+((waterSqSize)*(j+1));
 	
 	border.color = on?magenta:black; //if on, magenta, else black;
 	
@@ -82,33 +82,35 @@ void highlightBorder(int i, int j, bool on, int lcdNum) {   //Function to highli
 xycoor p1Select, p2Select;
 
 int gridbound_xBegin[XSIZE] = {
-	-1,-1,-1,-1,-1,-1
+	0x17b,0x352,0x567,0x7F2,0x9f6,0xc2e
 };
 int gridbound_xEnd[XSIZE] = {
-	-1,-1,-1,-1,-1,-1
+	0x351,0x566,0x7f1,0x9f5,0xc2d,0xd78
 };
 int gridbound_yBegin[YSIZE] = {
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1
+	0x17b,
+	0x332,
+	0x4A5,
+	0x615,
+	0x7A8,
+	0x94D,
+	0xAfd
 };
 int gridbound_yEnd[YSIZE] = {
-	-1,
-	-1,
-	-1,
-	-1,
-	-1,
-	-1
+	0x331,
+	0x4a4,
+	0x614,
+	0x7a7,
+	0x94c,
+	0xafc,
+	0xc73
 };
 
 
 void initBoard(void){
 	int i,j;
 	waterSqSize	= (240 - 10 - borderWidth*(XSIZE+1)) / XSIZE;
-	shipSize = waterSqSize - 5;
+	shipSize = waterSqSize - 10;
 	draw_rectangle(BtnData_new(0,30,0,30,green),0); //these functions are needed to "warm up?" the lcd
 	draw_rectangle(BtnData_new(0,30,0,30,green),1);
 	clear_lcd(blue,0);
@@ -140,13 +142,13 @@ BtnData getSquare(int i, int j, squareType a){
 				{
 					//blue border of 5 pixels
 					//functions for x and y location used to allow different number of squares
-					int sizeDiff = waterSqSize - shipSize;
+					int sizeDiff = (waterSqSize - shipSize)/2;
 					//external border + water between ship and border + border + ship size
 					
 					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
-						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
-						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
-						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
+						,5+sizeDiff*(2*i+1)+(borderWidth+shipSize)*(i+1)
+						,5+sizeDiff*(2*j+1)+borderWidth*(j+1)+shipSize*j
+						,5+sizeDiff*(2*j+1)+(borderWidth + shipSize)*(j+1)
 						, grey);
 					
 				}
@@ -268,7 +270,7 @@ void start_game(void){
 	int p2_ships_not_placed = 4;
 	int p1ShipSize = 3;
 	int p2ShipSize = 3;
-	bool p1HasSelection, p2HasSelection = false;
+	bool p1HasSelection = false, p2HasSelection = false;
 	int tempx,tempy;
 	initBoard();
 	
@@ -280,25 +282,28 @@ void start_game(void){
 	draw_ship_to_be_placed(p2ShipSize,1);
 	
 	while(1){
-		if(p1_ships_not_placed == 2) p1ShipSize = 2;
-		if(p2_ships_not_placed == 2) p2ShipSize = 2;
-		while(p1xval <= 0 || p2xval <= 0); //wait until a player presses the screen
-		if(p1xval>0){//p1 pressed screen
+		while(p1xval <= 0 && p2xval <= 0); //wait until a player presses the screen
+		if(p1xval>0 && p1_ships_not_placed > 0){//p1 pressed screen
 			tempx=getXsquarePressed(p1xval);
 			tempy=getYsquarePressed(p1yval);
+			p1xval = p1yval = 0;
 			if(tempy < 0 || tempx < 0) continue; //player pressed outside of square
 			
 			if(p1HasSelection){ //currently a selection
 				if(p1Select.x == tempx && p1Select.y == tempy){ //undo selection
-					p1Select.x = -1; p1Select.y = -1;							
 					highlightBorder(p1Select.x,p1Select.y, false,0); //un highlight selected square
+					p1Select.x = -1; p1Select.y = -1;							
 					p1HasSelection = false;
 				}
 				else if(tryCreateShip(tempx,tempy,p1ShipSize,0)){ //try to create a ship
 					highlightBorder(p1Select.x,p1Select.y, false,0); //un highlight selected square
 					p1HasSelection = false;
 					p1_ships_not_placed--;
-					}				
+					if(p1_ships_not_placed == 2){ 
+						p1ShipSize = 2;
+						draw_ship_to_be_placed(p1ShipSize,0); //draw 2 squares at bottom of screen
+					}
+				}				
 			}
 			else{ //currently no selection
 				p1Select.x=tempx;
@@ -306,7 +311,7 @@ void start_game(void){
 				highlightBorder(p1Select.x,p1Select.y, true,0); //highlight selected square
 				p1HasSelection = true;
 			}
-		}else{ //p2 pressed screen
+		}else if(p2xval>0 && p2_ships_not_placed > 0){ //p2 pressed screen
 			tempx=getXsquarePressed(p2xval);
 			tempy=getYsquarePressed(p2yval);
 			if(tempy < 0 || tempx < 0) continue; //player pressed outside of square
@@ -321,7 +326,11 @@ void start_game(void){
 					highlightBorder(p2Select.x,p2Select.y, false,1); //un highlight selected square
 					p2HasSelection = false;
 					p2_ships_not_placed--;
-					}				
+					if(p2_ships_not_placed == 2){ 
+						p2ShipSize = 2;
+						draw_ship_to_be_placed(p2ShipSize,1); //draw 2 squares at bottom of screen
+					}
+				}				
 			}else{ //currently no selection
 				p2Select.x=tempx;
 				p2Select.y=tempy;
@@ -338,31 +347,32 @@ right sized ship. Draw the ship on the screen.
 returns true if successfully created a ship
 returns false if a ship was not created.
 **********************************************/
-bool tryCreateShip(int tempx, int tempy, int shipSize, int player){
+bool tryCreateShip(int tempx, int tempy, int shipLength, int player){
 	int i;
-	if(p1Select.x ==tempx && p1Select.y == tempy-shipSize){
-		for(i=tempy-shipSize; i<tempy; i++){
+	shipLength--;
+	if(p1Select.x ==tempx && p1Select.y == tempy-(shipLength)){
+		for(i=tempy-shipLength; i<=tempy; i++){
 			p1Ships[tempx][i] = ship; //set ships
 			draw_rectangle(getSquare(tempx,i,ship),player);
 		}
 		return true;
 	}
-	else if(p1Select.x ==tempx && p1Select.y == tempy+shipSize&& tempy+shipSize< 7){
-		for(i=tempy; i<tempy+shipSize; i++){
+	else if(p1Select.x ==tempx && p1Select.y == tempy+(shipLength)&& tempy+(shipLength)< 7){
+		for(i=tempy; i<=tempy+shipLength; i++){
 			p1Ships[tempx][i] = ship; //set ships
 			draw_rectangle(getSquare(tempx,i,ship),player);
 		}
 		return true;	
 	}
-	else if(p1Select.x ==tempx-shipSize && p1Select.y == tempy){
-		for(i=tempx-shipSize; i<tempx; i++){
+	else if(p1Select.x ==tempx-(shipLength) && p1Select.y == tempy){
+		for(i=tempx-shipLength; i<=tempx; i++){
 			p1Ships[i][tempy] = ship; //set ships
 			draw_rectangle(getSquare(i,tempy,ship),player);
 		}
 		return true;	
 	}
-	else if(p1Select.x ==tempx+shipSize&& p1Select.y == tempy+shipSize&& tempx+3 < 6){
-		for(i=tempx; i<tempx+shipSize; i++){
+	else if(p1Select.x ==tempx+(shipLength)&& p1Select.y == tempy&& tempx+(shipLength) < 6){
+		for(i=tempx; i<=tempx+shipLength; i++){
 			p1Ships[i][tempy] = ship; //set ships
 			draw_rectangle(getSquare(i,tempy,ship),player); //update square
 		}
@@ -380,9 +390,12 @@ void end_game(void){
 
 void draw_ship_to_be_placed(int size, int ledNum){
 	int i;
-	draw_rectangle(BtnData_new(0,120,275,275+shipSize,blue),ledNum);
-		for(i=0; i<3; i++){ //draw ship to be placed
-		BtnData t = BtnData_new(20+shipSize*i + 3*i,20+shipSize*(i+1) + 3*i,275,275+shipSize, grey);
+	draw_rectangle(BtnData_new(50,50+shipSize*(2+1) + 3*2,
+			YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10,YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10+shipSize, blue)
+		,ledNum);
+		for(i=0; i<size; i++){ //draw ship to be placed
+		BtnData t = BtnData_new(50+shipSize*i + 3*i,50+shipSize*(i+1) + 3*i,
+			YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10,YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10+shipSize, grey);
 		draw_rectangle(t,ledNum);
 	}
 }
