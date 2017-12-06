@@ -6,13 +6,14 @@
 #define YSIZE 7
 typedef enum{water, ship, hit, miss, sunk} squareType;
 typedef enum{edge, center} shipSection;
-typedef enum{vertical, horizontal} orientation;
+typedef enum{vertical, horizontal, up, down, left, right} orientation;
 
 typedef struct{
 	squareType type;
 	shipSection s_section;
 	orientation dir;
 	int shipHP;
+	bool beenHit;
 }squareInfo;
 
 typedef struct{
@@ -35,8 +36,12 @@ void next_turn(void);
 void end_game(void);
 int getXsquarePressed(int xval);
 int getYsquarePressed(int yval);
-bool tryCreateShip(int tempx, int tempy, int shipSize, int player);
+bool tryCreateShip(int tempx, int tempy, int shipSize, int player, xycoor selection);
 void initShip(bool is_edge, int row, int col, orientation dir, int shipLength, int player);
+void hitShip(xycoor selection,int player);
+void trySinkShip(xycoor selection, int player);
+
+
 
 
 
