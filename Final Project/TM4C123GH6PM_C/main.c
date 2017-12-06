@@ -9,7 +9,6 @@
 #define UNLOCK 0x4c4f434b
 #define MAXTOUCH 50
 
-void run(void);
 void toggleBtn( BtnData *btn);
 void initPorts(void);
 void initSSI(void);
@@ -176,16 +175,6 @@ void toggleBtn( BtnData *btn){
 	}
 }
 
-void run(void){
-	while(1){
-		while(!doneTouch); //wait until a touch has started
-		doneTouch= false;
-		//computeTouch(xval, yval);
-	}
-	//toggleBtn(&btn1);
-	//toggleBtn(&btn1);
-}
-
 int main(void)
 {
 	//values for configuration. Assign these to the values you chose for your peripherals.
@@ -208,7 +197,7 @@ int main(void)
 	initSSI();
 	lcd_init();
 	
-	start_game();
+	run();
 	
 	//clear_lcd(black,0);
 	//initBtn();

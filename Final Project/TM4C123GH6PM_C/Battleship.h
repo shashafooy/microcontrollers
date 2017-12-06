@@ -13,6 +13,7 @@ typedef struct{
 	shipSection s_section;
 	orientation dir;
 	int shipHP;
+	int shipSize;
 	bool beenHit;
 }squareInfo;
 
@@ -28,6 +29,8 @@ void draw_p2Ships_p1Map(void);
 void drawGrid(int lcdNum);
 void highlightBorder(int xsquare, int ysquare, bool on, int lcdNum);
 void draw_ship_to_be_placed(int size, int ledNum);
+void updateSquare(int x, int y, squareType type, int player, bool ships);
+
 //BtnData shipSquare(int, int, squareType); //gets the beginning and ending point of x and y for a ship
 
 void run(void);

@@ -413,52 +413,46 @@ void initShip(bool is_edge, int row, int col, orientation dir, int shipLength, i
 	if(player == 0){
 		p1Ships[row][col].s_section = (is_edge)?edge:center;
 		p1Ships[row][col].shipHP=shipLength;
+		p1Ships[row][col].shipSize = shipLength;
 		p1Ships[row][col].dir = dir;
 		p1Ships[row][col].type = ship;
 	}else{
 		p2Ships[row][col].s_section = (is_edge)?edge:center;
 		p2Ships[row][col].shipHP=shipLength;
+		p2Ships[row][col].shipSize=shipLength;
 		p2Ships[row][col].dir = dir;
 		p2Ships[row][col].type = ship; //set ships
 	}
 }
 
 void next_turn(void){
+	int x, y;
 	if(p1Turn){
 		draw_p2Ships_p1Map();
 	}else{
 		draw_p1Ships_p2Map();
-	}
-	xycoor selection;
-	
+	}	
 	while(1){
 		while((p1Turn)?p1xval<= 0:p2xval <= 0); //wait until correct player presses the screen
-		selection.x=getXsquarePressed(p1xval);
-		selection.y=getYsquarePressed(p1yval);
-		p1xval = p1yval = 0;
-		if(selection.x < 0 || selection.y < 0) continue; //player pressed outside of square
-		if(p1Map[selection.x][selection.y].type != water) continue;
+		x=getXsquarePressed((p1Turn)?p1xval:p2xval);
+		y=getYsquarePressed((p1Turn)?p1yval:p2yval);
+		p1xval = p1yval = p2xval = p2yval = 0;
+		if(x < 0 || y < 0) continue; //player pressed outside of square
+		if((p1Turn)?p1Map[x][y].type:p2Map[x][y].type != water) continue;
 		//player has now selected a valid empty square
-		if(p2Ships[selection.x][selection.y].type != ship){ // miss
-			p1Map[selection.x][selection.y].type = miss;
-			p2Ships[selection.x][selection.y].type = miss;
-			BtnData btn = getSquare(selection.x,selection.y,miss);
-			draw_rectangle(btn,0);
-			draw_rectangle(btn,1); //update screens
+		if((p1Turn)?p2Ships[x][y].type : p1Ships[x][y].type != ship){ // miss
+			updateSquare(x,y,miss,!p1Turn,false); //update pMap
+			updateSquare(x,y,miss,p1Turn,true); //update pShip
 		}
-		else{ //hit
-			p1Map[selection.x][selection.y].type = hit;
-			p2Ships[selection.x][selection.y].type = hit;
-			BtnData btn = getSquare(selection.x,selection.y,miss);
-			draw_rectangle(btn,0);
-			draw_rectangle(btn,1);
-			
-			hitShip(selection,1);
-			trySinkShip(selection,1);
+		else{ //hit			
+			xycoor selection;
+			selection.x=x;
+			selection.y=y;
+			hitShip(selection, p1Turn);
+			trySinkShip(selection, p1Turn);
 		}
-	
+		return;
 	}
-	
 }
 
 void end_game(void){
@@ -500,14 +494,127 @@ void run(void){
 	while(1);
 }
 
-void hitShip(xycoor selection,int player){
+void hitShip(xycoor select,int player){
 	//decrement ship HP for ships next to selection
+		int x,y,i,shipLength;
+		bool p;
+		x=select.x;
+		y=select.y;
+		p = player;
+		shipLength=(player==0)?p1Ships[x][y].shipSize : p2Ships[x][y].shipSize;
+		
+		updateSquare(x,y,hit,p,true);
+		updateSquare(x,y,hit,!p,false);
+	
+		switch((player==0)?p1Ships[x][y].dir : p2Ships[x][y].dir){
+		case up:
+			for(i=y; i>y-shipLength; i--){
+				if(p) p2Ships[x][i].shipHP--;
+				else p1Ships[x][i].shipHP--;
+			}
+			break;
+		case down:
+			for(i=y; i<y+shipLength; i++){
+				if(p) p2Ships[x][i].shipHP--;
+				else p1Ships[x][i].shipHP--;
+			}
+			break;
+		case left:
+			for(i=x; i>x-shipLength; i--){
+				if(p) p2Ships[i][y].shipHP--;
+				else p1Ships[i][y].shipHP--;
+			}
+			break;
+		case right:
+			for(i=x; i<x+shipLength; i++){
+				if(p) p2Ships[i][y].shipHP--;
+				else p1Ships[i][y].shipHP--;
+			}
+			break;
+		case horizontal:
+			for(i=x-1; i<x+1; i++){
+				if(p) p2Ships[i][y].shipHP--;
+				else p1Ships[i][y].shipHP--;
+			}
+			break;
+		case vertical:
+			for(i=y-1; i<y+1; i++){
+				if(p) p2Ships[x][i].shipHP--;
+				else p1Ships[x][i].shipHP--;
+			}
+			break;
+		default: break;
+		
+		}
+}
+
+void trySinkShip(xycoor select, int player){
+	//check if 0 HP-> change ship status to sunk, update squares, decrement ships alive
+	int i,x,y,shipLength;
+	bool p;
+	x=select.x;
+	y=select.y;
+	p = player;
+	shipLength=(player==0)?p1Ships[x][y].shipSize:p2Ships[x][y].shipSize;
+	if(player ==0){ //p1
+		if(p1Ships[x][y].shipHP != 0) return;
+		p1ShipsAlive--;
+	}else{
+		if(p2Ships[x][y].shipHP != 0) return;
+		p2ShipsAlive--;
+	}
+	switch((player==0)?p1Ships[x][y].dir : p2Ships[x][y].dir){
+		case up:
+			for(i=y; i>y-shipLength; i--){
+				updateSquare(x,i,sunk,p,true);
+				updateSquare(x,i,sunk,!p,false);
+			}
+			break;
+		case down:
+			for(i=y; i<y+shipLength; i++){
+				updateSquare(x,i,sunk,p,true);
+				updateSquare(x,i,sunk,!p,false);
+			}
+			break;
+		case left:
+			for(i=x; i>x-shipLength; i--){
+				updateSquare(i,y,sunk,p,true);
+				updateSquare(i,y,sunk,!p,false);
+			}
+			break;
+		case right:
+			for(i=x; i<x+shipLength; i++){
+				updateSquare(i,y,sunk,p,true);
+				updateSquare(i,y,sunk,!p,false);
+			}
+			break;
+		case horizontal:
+			for(i=x-1; i<x+1; i++){
+				updateSquare(i,y,sunk,p,true);
+				updateSquare(i,y,sunk,!p,false);
+			}
+			break;
+		case vertical:
+			for(i=y-1; i<y+1; i++){
+				updateSquare(x,i,sunk,p,true);
+				updateSquare(x,i,sunk,!p,false);
+			}
+			break;
+		default: break;
+		
+		}
+}
+
+/********************
+updates a specific player's ship or hit map
+ships true - update ships
+ships false - update map
+********************/
+void updateSquare(int x, int y, squareType type, int player, bool ships){
+		if(player==0&&ship)	p1Ships[x][y].type=type;
+		else if(player==0&&!ship)	p1Map[x][y].type=type;
+		else if(player==1&&ship) p2Ships[x][y].type=type;
+		else p2Map[x][y].type=type;
+		draw_rectangle(getSquare(x,y,type),player);
 	
 }
-
-void trySinkShip(xycoor selection, int player){
-	//check if 0 HP-> change ship status to sunk, update squares, decrement ships alive
-}
-
-
-
