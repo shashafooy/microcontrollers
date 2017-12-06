@@ -32,8 +32,10 @@ BtnData shipSquare(int i, int j, squareInfo status) {
 This function delays the game for 2 seconds so the user can see if their selection was a hit or miss
 *******************************************************/
 void delay(int sec) {
+	WTIMER0->CTL = 0x0; //disable timer
 	WTIMER0->TAILR = 0x98967ff; // (load+1)/80MHz= 2 secs
-	while(WTIMER0->TAV > 0); // Wait for timer to finish
+	WTIMER0->CTL |= 0x1; //enable timer
+	while(WTIMER0->TAV > 10); // Wait for timer to finish
 }
 
 void drawGrid(int lcdNum) {
@@ -94,7 +96,7 @@ int gridbound_xBegin[XSIZE] = {
 	0x17b,0x352,0x567,0x7F2,0x9f6,0xc2e
 };
 int gridbound_xEnd[XSIZE] = {
-	0x351,0x566,0x7f1,0x9f5,0xc2d,0xd78
+	0x351,0x566,0x7f1,0x9f5,0xc2d,0xe54
 };
 int gridbound_yBegin[YSIZE] = {
 	0x17b,
@@ -112,7 +114,7 @@ int gridbound_yEnd[YSIZE] = {
 	0x7a7,
 	0x94c,
 	0xafc,
-	0xc73
+	0xcaf
 };
 
 
@@ -165,12 +167,13 @@ BtnData getSquare(int i, int j, squareType a){
 				{
 					//blue border of 5 pixels
 					//functions for x and y location used to allow different number of squares
-					int sizeDiff = waterSqSize - shipSize;
+					int sizeDiff = (waterSqSize - shipSize)/2;
+					//external border + water between ship and border + border + ship size
 					
 					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
-						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
-						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
-						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
+						,5+sizeDiff*(2*i+1)+(borderWidth+shipSize)*(i+1)
+						,5+sizeDiff*(2*j+1)+borderWidth*(j+1)+shipSize*j
+						,5+sizeDiff*(2*j+1)+(borderWidth + shipSize)*(j+1)
 						, red);
 					
 				}
@@ -178,25 +181,25 @@ BtnData getSquare(int i, int j, squareType a){
 				{
 					//blue border of 5 pixels
 					
-					int sizeDiff = waterSqSize - shipSize;
+					int sizeDiff = (waterSqSize - shipSize)/2;
+					//external border + water between ship and border + border + ship size
 					
 					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
-						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
-						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
-						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
+						,5+sizeDiff*(2*i+1)+(borderWidth+shipSize)*(i+1)
+						,5+sizeDiff*(2*j+1)+borderWidth*(j+1)+shipSize*j
+						,5+sizeDiff*(2*j+1)+(borderWidth + shipSize)*(j+1)
 						, white);
 				}
 			case sunk:
 			{
-				//blue border of 5 pixels with a solid red square for a sunk ship
-				int sizeDiff = waterSqSize - shipSize;
+				int sizeDiff = (waterSqSize - shipSize)/2;
 					//external border + water between ship and border + border + ship size
 					
 					return BtnData_new(5+sizeDiff*(2*i+1)+(borderWidth)*(i+1)+shipSize*i
-						,5+sizeDiff*(2*i+2)+(borderWidth+shipSize)*(i+1)
-						,5+sizeDiff*(2*i+1)+borderWidth*(j+1)+waterSqSize*j
-						,5+sizeDiff*(2*i+2)+(borderWidth + waterSqSize)*(j+1)
-						, grey);
+						,5+sizeDiff*(2*i+1)+(borderWidth+shipSize)*(i+1)
+						,5+sizeDiff*(2*j+1)+borderWidth*(j+1)+shipSize*j
+						,5+sizeDiff*(2*j+1)+(borderWidth + shipSize)*(j+1)
+						, red);
 			}
 			default: break;
 		}
@@ -230,7 +233,7 @@ void draw_p1Ships_p2Map(void){
 				draw_circle(getSquare(i, j, miss), 1);						//if player2 has missed the current square, display water with a white circle
 			else if(p2Map[i][j].type == hit)
 				draw_circle(getSquare(i, j, p1Ships[i][j].type), 1);						//if player 2 has hit the current square, display water with a red circle
-			else if(p2Map[i][j].type == sunk) //****ADD A SUNK shipType****//
+			else if(p2Map[i][j].type == sunk) 
 				draw_rectangle(getSquare(i, j, p1Ships[i][j].type), 1);			//if player 2 has sunk a ship, the ship squares will be solid red
 		}
 	}
@@ -246,13 +249,36 @@ void draw_p2Ships_p1Map(void){
 			draw_rectangle(btn, 0);
 			draw_rectangle(btn, 1);
 			
+			
+			if(p2Ships[i][j].type==ship){ 														//if player1 square is a ship that has not been hit, display the ship
+				draw_rectangle(getSquare(i,j,p2Ships[i][j].type),1);
+				}
+			else if(p2Ships[i][j].type == hit) {											//if player1 square is a ship that has been hit, display ship with a red circle overlay
+				draw_rectangle(getSquare(i,j,p2Ships[i][j].type),1);
+				draw_circle(getSquare(i,j,p2Ships[i][j].type), 1);
+			}
+			else if(p2Ships[i][j].type == miss) {										//if player2 has missed a shot, display a miss on player1 screen
+				draw_circle(getSquare(i,j,p2Ships[i][j].type),1);
+			}
+			else if(p2Ships[i][j].type == sunk) {
+				draw_rectangle(getSquare(i,j,p2Ships[i][j].type), 1);
+			}
+			if(p1Map[i][j].type== miss) 
+				draw_circle(getSquare(i, j, miss), 0);						//if player2 has missed the current square, display water with a white circle
+			else if(p1Map[i][j].type == hit)
+				draw_circle(getSquare(i, j, p2Ships[i][j].type), 0);						//if player 2 has hit the current square, display water with a red circle
+			else if(p2Map[i][j].type == sunk) 
+				draw_rectangle(getSquare(i, j, p2Ships[i][j].type), 0);			//if player 2 has sunk a ship, the ship squares will be solid red
+			/*
 			if(p2Ships[i][j].type!=water)
 				draw_rectangle(getSquare(i,j,p2Ships[i][j].type),0);
 			if(p1Map[i][j].type!=water)
 				draw_rectangle(getSquare(i,j,p1Map[i][j].type),1);
+			*/
 		}
 	}
 }
+
 int getXsquarePressed(int xval){
 	if(xval > gridbound_xBegin[0] && xval < gridbound_xEnd[0]) return 0;
 	if(xval > gridbound_xBegin[1] && xval < gridbound_xEnd[1]) return 1;
@@ -289,7 +315,7 @@ void start_game(void){
 	draw_ship_to_be_placed(p1ShipSize,0);
 	draw_ship_to_be_placed(p2ShipSize,1);
 	
-	while(p1_ships_not_placed > 0 && p2_ships_not_placed > 0){
+	while(p1_ships_not_placed > 0 || p2_ships_not_placed > 0){
 		while(p1xval <= 0 && p2xval <= 0); //wait until a player presses the screen
 		if(p1xval>0 && p1_ships_not_placed > 0){//p1 pressed screen
 			tempx=getXsquarePressed(p1xval);
@@ -323,6 +349,7 @@ void start_game(void){
 		}else if(p2xval>0 && p2_ships_not_placed > 0){ //p2 pressed screen
 			tempx=getXsquarePressed(p2xval);
 			tempy=getYsquarePressed(p2yval);
+			p2xval = p2yval = 0;
 			if(tempy < 0 || tempx < 0) continue; //player pressed outside of square
 			
 			if(p2HasSelection){ //currently a selection
@@ -343,11 +370,11 @@ void start_game(void){
 			}else{ //currently no selection
 				p2Select.x=tempx;
 				p2Select.y=tempy;
-				highlightBorder(p2Select.x,p2Select.y, true,0); //highlight selected square
+				highlightBorder(p2Select.x,p2Select.y, true,1); //highlight selected square
 				p2HasSelection = true;
 			}
 		}
-	}	
+	}
 }
 
 /*********************************************
@@ -440,7 +467,7 @@ void next_turn(void){
 		if(x < 0 || y < 0) continue; //player pressed outside of square
 		if((p1Turn)?p1Map[x][y].type:p2Map[x][y].type != water) continue;
 		//player has now selected a valid empty square
-		if((p1Turn)?p2Ships[x][y].type : p1Ships[x][y].type != ship){ // miss
+		if(((p1Turn)?p2Ships[x][y].type : p1Ships[x][y].type) != ship){ // miss
 			updateSquare(x,y,miss,!p1Turn,false); //update pMap
 			updateSquare(x,y,miss,p1Turn,true); //update pShip
 		}
@@ -615,6 +642,8 @@ void updateSquare(int x, int y, squareType type, int player, bool ships){
 		else if(player==0&&!ship)	p1Map[x][y].type=type;
 		else if(player==1&&ship) p2Ships[x][y].type=type;
 		else p2Map[x][y].type=type;
-		draw_rectangle(getSquare(x,y,type),player);
+		
+		if(type == hit || type == miss) draw_circle(getSquare(x,y,type),player);
+		else draw_rectangle(getSquare(x,y,type),player);
 	
 }

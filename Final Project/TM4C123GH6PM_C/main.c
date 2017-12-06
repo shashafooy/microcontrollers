@@ -7,7 +7,7 @@
 #define RCGC2_PB 0x00000002
 #define RCGC2_PC 0x00000004
 #define UNLOCK 0x4c4f434b
-#define MAXTOUCH 50
+#define MAXTOUCH 500
 
 void toggleBtn( BtnData *btn);
 void initPorts(void);
@@ -42,27 +42,8 @@ void init_WTimer(){
 	//Wtimer0 for delay() function
 	WTIMER0->CTL = 0x0; //disable timer
 	WTIMER0->CFG = 0x4; //32 bit wide
-	WTIMER0->TAMR = 0x1; //One-Shot
-	WTIMER0->CTL |= 0x1; //enable timer
+	WTIMER0->TAMR = 0x2; //Periodic
 	
-}
-
-
-void initBtn(void){
-	btn1.x_begin = 40; btn1.x_end = 200; btn1.y_begin = 20; 
-	btn1.y_end = 100;	btn1.color = red; btn1.on = true;
-	
-	btn2.x_begin = 40; btn2.x_end = 200; btn2.y_begin = 120; 
-	btn2.y_end = 200;	btn2.color = yellow; btn2.on = true;
-	
-	btn3.x_begin = 40; btn3.x_end = 200; btn3.y_begin = 220; 
-	btn3.y_end = 300;	btn3.color = green; btn3.on = true;
-	
-	draw_rectangle(btn1,0);
-	draw_rectangle(btn2,0);
-	draw_rectangle(btn3,0);
-	
-	doneTouch = false;
 }
 
 void initPorts(void){
@@ -113,7 +94,7 @@ void GPIOB_Handler(void){
 		GPIOB->ICR = 0x4; //acknowlege pin 2 interrupt
 	}else{										//LCD1 Interrupt
 		GPIOB->IM = 0x0; //mask pin 2,3
-		while((GPIOB->DATA &~0x8) >> 3 == 0){ //wait until touch is done
+		while((GPIOB->DATA & 0x8) >> 3 == 0){ //wait until touch is done
 			xcord[current] = get_touch_x(1);
 			ycord[current] = get_touch_y(1);
 			current++;
@@ -146,35 +127,6 @@ void initSSI(void){
 	SSI0->CR1 |= 0x2; //enable SSIO
 }
 
-
-
-void computeTouch(unsigned int xval, unsigned int yval){
-	if(xval > 750 && xval < 3250){
-		if(yval > 400 && yval < 1400){
-			toggleBtn(&btn1);
-		}
-		else if(yval > 1400 && yval < 2500){
-			toggleBtn(&btn2);
-		}
-		else if(yval > 2500 && yval < 3550){
-			toggleBtn(&btn3);
-		}
-	}
-}
-
-void toggleBtn( BtnData *btn){
-	if(btn->on){ //if button is currently on, only show border of button, want to turn off
-		BtnData temp = *btn;
-		temp.x_begin += 10; temp.x_end -= 10; temp.y_begin += 10; 
-		temp.y_end -= 10;	temp.color = black;
-		btn->on=false;
-		draw_rectangle(temp,0);
-	}else{ //if button is currently off, turn on, fill in
-		draw_rectangle(*btn,0);
-		btn->on = true;
-	}
-}
-
 int main(void)
 {
 	//values for configuration. Assign these to the values you chose for your peripherals.
@@ -193,11 +145,15 @@ int main(void)
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	current = touchItems = p1xval = p1yval = p2xval = p2yval= 0;
 	
+	init_SysClk();
+	init_WTimer();
 	initPorts();
 	initSSI();
 	lcd_init();
 	
-	run();
+	draw_rectangle(BtnData_new(10, 100, 10, 100, cyan), 0);
+	draw_circle(BtnData_new(10, 100, 10, 100, red), 0);
+	//run();
 	
 	//clear_lcd(black,0);
 	//initBtn();

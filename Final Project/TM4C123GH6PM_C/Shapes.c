@@ -59,14 +59,12 @@ void draw_rectangle(BtnData btn, int ledNum){
 void draw_circle(BtnData startCircle, int ledNum) {
 	unsigned int diff, mid;
 	unsigned int i, j, rs;
-	signed int xs, ys;
+	int xs, ys;
 	unsigned int radius;
 	
-	LCD_SetPage(startCircle.y_begin, startCircle.y_end, ledNum);
-	LCD_setColumn(startCircle.x_begin, startCircle.x_end, ledNum);
-	
-	write_cmd(0x2c, ledNum);
-	
+	//LCD_SetPage(startCircle.y_begin, startCircle.y_end, ledNum);
+	//LCD_setColumn(startCircle.x_begin, startCircle.x_end, ledNum);
+		
 	//area	= (startCircle.x_end-startCircle.x_begin+1)*(startCircle.y_end-startCircle.y_begin+1); //area of the square region the circle will be drawn in
 	
 	diff = startCircle.x_end - startCircle.x_begin; //Difference between end point and beginning point
@@ -79,7 +77,13 @@ void draw_circle(BtnData startCircle, int ledNum) {
 			xs = (i - mid) * (i - mid);
 				for(j = startCircle.y_begin; j< startCircle.y_end; j++){
 					ys = (j-mid) * (j-mid);
-					if(xs + ys < rs) { write_dat(startCircle.color, ledNum); }
+					if(xs + ys < rs) 
+					{ 
+						LCD_SetPage(j, startCircle.y_end, ledNum);
+						LCD_setColumn(i,startCircle.x_end,ledNum);
+						write_cmd(0x2c, ledNum);
+						write_dat(startCircle.color, ledNum); 
+					}
 				}
 			}	
 }
