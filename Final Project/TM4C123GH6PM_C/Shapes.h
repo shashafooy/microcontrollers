@@ -23,6 +23,9 @@ void clear_lcd(unsigned short color, int lcdNum);
 //void draw_rectangle(int x_begin, int y_begin, int x_end, int y_end, unsigned short color);
 void draw_rectangle(BtnData btn1, int ledNum);
 void draw_circle(BtnData startCircle, int lcdNum);
+void draw_L(int ledNum);
+void draw_W(int ledNum);
+
 
 
 #endif

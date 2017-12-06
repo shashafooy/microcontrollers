@@ -1,14 +1,17 @@
 #include "Battleship.h"
 
 
-squareType p1Ships[XSIZE][YSIZE], p1Map[XSIZE][YSIZE], p2Ships[XSIZE][YSIZE], p2Map[XSIZE][YSIZE];
+squareInfo p1Ships[XSIZE][YSIZE], p1Map[XSIZE][YSIZE], p2Ships[XSIZE][YSIZE], p2Map[XSIZE][YSIZE];
 int borderWidth = 2; //border width
 int waterSqSize, //water square size
 	shipSize;  
+bool p1Turn;
+int p1ShipsAlive, p2ShipsAlive;
+xycoor p1Select, p2Select;
 
 
 /*
-BtnData shipSquare(int i, int j, squareType status) { 
+BtnData shipSquare(int i, int j, squareInfo status) { 
 	int sizeDiff = waterSqSize - shipSize;
 	BtnData ship;
 	
@@ -79,8 +82,6 @@ void highlightBorder(int i, int j, bool on, int lcdNum) {   //Function to highli
 	
 }
 
-xycoor p1Select, p2Select;
-
 int gridbound_xBegin[XSIZE] = {
 	0x17b,0x352,0x567,0x7F2,0x9f6,0xc2e
 };
@@ -118,10 +119,10 @@ void initBoard(void){
 	/*draw grid*/
 	for(i=0;i<XSIZE;i++){
 		for(j=0;j<YSIZE;j++){
-			p1Ships[i][j] = water;
-			p1Map[i][j] = water;
-			p2Ships[i][j] = water;
-			p2Map[i][j] = water;
+			p1Ships[i][j].type = water;
+			p1Map[i][j].type = water;
+			p2Ships[i][j].type = water;
+			p2Map[i][j].type = water;
 		}
 	}
 }
@@ -204,25 +205,25 @@ void draw_p1Ships_p2Map(void){
 			draw_rectangle(btn, 0);
 			draw_rectangle(btn, 1);
 			
-			if(p1Ships[i][j]==ship){ 														//if player1 square is a ship that has not been hit, display the ship
-				draw_rectangle(getSquare(i,j,p1Ships[i][j]),0);
+			if(p1Ships[i][j].type==ship){ 														//if player1 square is a ship that has not been hit, display the ship
+				draw_rectangle(getSquare(i,j,p1Ships[i][j].type),0);
 				}
-			else if(p1Ships[i][j] == hit) {											//if player1 square is a ship that has been hit, display ship with a red circle overlay
-				draw_rectangle(getSquare(i,j,p1Ships[i][j]),0);
-				draw_circle(getSquare(i,j,p1Ships[i][j]), 0);
+			else if(p1Ships[i][j].type == hit) {											//if player1 square is a ship that has been hit, display ship with a red circle overlay
+				draw_rectangle(getSquare(i,j,p1Ships[i][j].type),0);
+				draw_circle(getSquare(i,j,p1Ships[i][j].type), 0);
 			}
-			else if(p1Ships[i][j] == miss) {										//if player2 has missed a shot, display a miss on player1 screen
-				draw_circle(getSquare(i,j,p1Ships[i][j]),0);
+			else if(p1Ships[i][j].type == miss) {										//if player2 has missed a shot, display a miss on player1 screen
+				draw_circle(getSquare(i,j,p1Ships[i][j].type),0);
 			}
-			else if(p1Ships[i][j] == sunk) {
-				draw_rectangle(getSquare(i,j,p1Ships[i][j]), 0);
+			else if(p1Ships[i][j].type == sunk) {
+				draw_rectangle(getSquare(i,j,p1Ships[i][j].type), 0);
 			}
-			if(p2Map[i][j]== miss) 
+			if(p2Map[i][j].type== miss) 
 				draw_circle(getSquare(i, j, miss), 1);						//if player2 has missed the current square, display water with a white circle
-			else if(p2Map[i][j] == hit)
-				draw_circle(getSquare(i, j, p1Ships[i][j]), 1);						//if player 2 has hit the current square, display water with a red circle
-			else if(p2Map[i][j] == sunk) //****ADD A SUNK shipType****//
-				draw_rectangle(getSquare(i, j, p1Ships[i][j]), 1);			//if player 2 has sunk a ship, the ship squares will be solid red
+			else if(p2Map[i][j].type == hit)
+				draw_circle(getSquare(i, j, p1Ships[i][j].type), 1);						//if player 2 has hit the current square, display water with a red circle
+			else if(p2Map[i][j].type == sunk) //****ADD A SUNK shipType****//
+				draw_rectangle(getSquare(i, j, p1Ships[i][j].type), 1);			//if player 2 has sunk a ship, the ship squares will be solid red
 		}
 	}
 }
@@ -237,10 +238,10 @@ void draw_p2Ships_p1Map(void){
 			draw_rectangle(btn, 0);
 			draw_rectangle(btn, 1);
 			
-			if(p2Ships[i][j]!=water)
-				draw_rectangle(getSquare(i,j,p2Ships[i][j]),0);
-			if(p1Map[i][j]!=water)
-				draw_rectangle(getSquare(i,j,p1Map[i][j]),1);
+			if(p2Ships[i][j].type!=water)
+				draw_rectangle(getSquare(i,j,p2Ships[i][j].type),0);
+			if(p1Map[i][j].type!=water)
+				draw_rectangle(getSquare(i,j,p1Map[i][j].type),1);
 		}
 	}
 }
@@ -274,14 +275,13 @@ void start_game(void){
 	int tempx,tempy;
 	initBoard();
 	
-	/*draw example ship size below grid here*/
 	drawGrid(0);
 	drawGrid(1);
 	
 	draw_ship_to_be_placed(p1ShipSize,0);
 	draw_ship_to_be_placed(p2ShipSize,1);
 	
-	while(1){
+	while(p1_ships_not_placed > 0 && p2_ships_not_placed > 0){
 		while(p1xval <= 0 && p2xval <= 0); //wait until a player presses the screen
 		if(p1xval>0 && p1_ships_not_placed > 0){//p1 pressed screen
 			tempx=getXsquarePressed(p1xval);
@@ -299,10 +299,11 @@ void start_game(void){
 					highlightBorder(p1Select.x,p1Select.y, false,0); //un highlight selected square
 					p1HasSelection = false;
 					p1_ships_not_placed--;
+					
 					if(p1_ships_not_placed == 2){ 
 						p1ShipSize = 2;
 						draw_ship_to_be_placed(p1ShipSize,0); //draw 2 squares at bottom of screen
-					}
+					}else if(p1_ships_not_placed == 0) draw_ship_to_be_placed(0,0);
 				}				
 			}
 			else{ //currently no selection
@@ -329,7 +330,7 @@ void start_game(void){
 					if(p2_ships_not_placed == 2){ 
 						p2ShipSize = 2;
 						draw_ship_to_be_placed(p2ShipSize,1); //draw 2 squares at bottom of screen
-					}
+					}else if(p2_ships_not_placed == 0) draw_ship_to_be_placed(0,1);
 				}				
 			}else{ //currently no selection
 				p2Select.x=tempx;
@@ -338,7 +339,7 @@ void start_game(void){
 				p2HasSelection = true;
 			}
 		}
-	}
+	}	
 }
 
 /*********************************************
@@ -350,30 +351,30 @@ returns false if a ship was not created.
 bool tryCreateShip(int tempx, int tempy, int shipLength, int player){
 	int i;
 	shipLength--;
-	if(p1Select.x ==tempx && p1Select.y == tempy-(shipLength)){
+	if(p1Select.x ==tempx && p1Select.y == tempy-(shipLength)){ //vertical
 		for(i=tempy-shipLength; i<=tempy; i++){
-			p1Ships[tempx][i] = ship; //set ships
+			initShip((i==tempy-shipLength||i==tempy),tempx,i,vertical,shipLength+1,player);
 			draw_rectangle(getSquare(tempx,i,ship),player);
 		}
 		return true;
 	}
-	else if(p1Select.x ==tempx && p1Select.y == tempy+(shipLength)&& tempy+(shipLength)< 7){
+	else if(p1Select.x ==tempx && p1Select.y == tempy+(shipLength)&& tempy+(shipLength)< 7){ //vertical
 		for(i=tempy; i<=tempy+shipLength; i++){
-			p1Ships[tempx][i] = ship; //set ships
+			initShip((i==tempy+shipLength || i== tempy),tempx,i,vertical,shipLength+1,player);
 			draw_rectangle(getSquare(tempx,i,ship),player);
 		}
 		return true;	
 	}
-	else if(p1Select.x ==tempx-(shipLength) && p1Select.y == tempy){
+	else if(p1Select.x ==tempx-(shipLength) && p1Select.y == tempy){ //horizontal
 		for(i=tempx-shipLength; i<=tempx; i++){
-			p1Ships[i][tempy] = ship; //set ships
+			initShip((i==tempx-shipLength||i==tempx),i,tempy,horizontal,shipLength+1,player);
 			draw_rectangle(getSquare(i,tempy,ship),player);
 		}
 		return true;	
 	}
-	else if(p1Select.x ==tempx+(shipLength)&& p1Select.y == tempy&& tempx+(shipLength) < 6){
+	else if(p1Select.x ==tempx+(shipLength)&& p1Select.y == tempy&& tempx+(shipLength) < 6){ //horizontal
 		for(i=tempx; i<=tempx+shipLength; i++){
-			p1Ships[i][tempy] = ship; //set ships
+			initShip((i==tempx||i==tempx+shipLength),i,tempy,horizontal,shipLength+1,player);
 			draw_rectangle(getSquare(i,tempy,ship),player); //update square
 		}
 		return true;	
@@ -381,25 +382,63 @@ bool tryCreateShip(int tempx, int tempy, int shipLength, int player){
 	return false;
 }
 
+/**************
+creates a ship with given attributes
+***************/
+void initShip(bool is_edge, int row, int col, orientation dir, int shipLength, int player){
+	if(player == 0){
+		p1Ships[row][col].s_section = (is_edge)?edge:center;
+		p1Ships[row][col].shipHP=shipLength;
+		p1Ships[row][col].dir = (dir==vertical)?vertical:horizontal;
+		p1Ships[row][col].type = ship;
+	}else{
+		p2Ships[row][col].s_section = (is_edge)?edge:center;
+		p2Ships[row][col].shipHP=shipLength;
+		p2Ships[row][col].dir = (dir==vertical)?vertical:horizontal;
+		p2Ships[row][col].type = ship; //set ships
+	}
+}
 
 void next_turn(void){
 }
 
 void end_game(void){
+	if(p1ShipsAlive==0){
+		draw_L(0);
+		draw_W(1);
+	}else{
+		draw_W(0);
+		draw_L(1);
+	}
 }
 
 void draw_ship_to_be_placed(int size, int ledNum){
 	int i;
 	draw_rectangle(BtnData_new(50,50+shipSize*(2+1) + 3*2,
 			YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10,YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10+shipSize, blue)
-		,ledNum);
-		for(i=0; i<size; i++){ //draw ship to be placed
-		BtnData t = BtnData_new(50+shipSize*i + 3*i,50+shipSize*(i+1) + 3*i,
-			YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10,YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10+shipSize, grey);
-		draw_rectangle(t,ledNum);
+		,ledNum); //draw water squares
+	for(i=0; i<size; i++){ //draw ship to be placed
+	BtnData t = BtnData_new(50+shipSize*i + 3*i,50+shipSize*(i+1) + 3*i,
+		YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10,YSIZE*waterSqSize + (YSIZE+1)*borderWidth + 5 +10+shipSize, grey);
+	draw_rectangle(t,ledNum);
 	}
 }
 
-
+void run(void){
+	bool winner;
+	winner=false;
+	p1Turn = true;
+	p1ShipsAlive = p2ShipsAlive = 4;
+	
+	start_game();
+	while(!winner){
+		next_turn();
+		p1Turn = !p1Turn; //switch player turn
+		delay(2); //how long to delay in seconds
+		if(p1ShipsAlive == 0 || p2ShipsAlive==0) winner=true;
+	}
+	end_game();
+	while(1);
+}
 
 

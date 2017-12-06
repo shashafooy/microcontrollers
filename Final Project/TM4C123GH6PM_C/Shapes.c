@@ -84,7 +84,7 @@ void draw_circle(BtnData startCircle, int ledNum) {
 			}	
 }
 
-void draw_l(int ledNum){
+void draw_L(int ledNum){
 	BtnData loser;
 	
 	loser.y_begin = 60; loser.y_end = 300;
@@ -99,7 +99,7 @@ void draw_l(int ledNum){
 	draw_rectangle(loser, ledNum); //draw bottom part of 'L'
 }
 
-void draw_w(int ledNum) {
+void draw_W(int ledNum) {
 	BtnData winner;
 	
 	winner.x_begin = 40; winner.x_end = 60;
