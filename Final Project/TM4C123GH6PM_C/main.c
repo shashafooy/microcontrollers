@@ -22,6 +22,32 @@ unsigned int xcord[MAXTOUCH], ycord[MAXTOUCH];
 unsigned int current, touchItems;
 int p1xval, p1yval, p2xval, p2yval;
 
+void init_SysClk() {
+	
+	//set sysclk to 80MHz
+	SYSCTL->RCC = (SYSCTL->RCC & ~0x7c0) + 0x540; //set XTAL to 0x15 16MHz
+	SYSCTL->RCC2 |= 0x80000000; //use RCC2
+	SYSCTL->RCC2 |= 0x1 << 11; //use bypass pll
+	SYSCTL->RCC2 &= ~0x70; //clear OSCSRC2, use main oscillator
+	SYSCTL->RCC2 &= ~0x2000; //clear	PWRDN2
+	SYSCTL->RCC2 |= 0x40000000; //DIV400 = 1
+	SYSCTL->RCC2 = (SYSCTL->RCC2 & ~0x1fc00000) + (0x4<<22);
+	while((SYSCTL->RIS & 0x40) == 0); //wait for PLLRIS bit
+	SYSCTL->RCC2 &= ~(0x1 << 11); //clear bypass pll
+}
+
+void init_WTimer(){
+	
+	SYSCTL->RCGCWTIMER = 0x1; //use GPWTimer 0
+	
+	//Wtimer0 for delay() function
+	WTIMER0->CTL = 0x0; //disable timer
+	WTIMER0->CFG = 0x4; //32 bit wide
+	WTIMER0->TAMR = 0x1; //One-Shot
+	WTIMER0->CTL |= 0x1; //enable timer
+	
+}
+
 
 void initBtn(void){
 	btn1.x_begin = 40; btn1.x_end = 200; btn1.y_begin = 20; 
@@ -112,13 +138,12 @@ void initSSI(void){
 	SSI0->CR1 &= ~0x2; //disable SSIO, SSICR1 disable SSE bit (2nd)
 	SSI0->CR1 = 0x00000000; //master mode
 	SSI0->CC = 0x0; //use sysclock clock
-	//SSI clock needs to be 2MHz
+	SSI0->CPSR = 0x2; //set the prescale value to 2 CPSDVSR
 	//SSIClk = SysClk / (CPSDVSR * (1 + SCR))
-	//2Mhz = 16MHz/ (CPSDVSR *(1+1))   CPSDVSR= 4
-	//faster? 6.35MHz max? SSIClk=4MHz  CPSDVSR=2  SCR=1
-	//SSI0->CPSR = 0x4; //CPSDVSR = 4 
-	SSI0->CPSR = 0x2;
-	SSI0->CR0 = 0x1C7; //SCR = 1, SPH = SPO = 1, DSS= 8 bits
+	//5.7Mhz = 80MHz/ (CPSDVSR *(1+SCR))   CPSDVSR= 2
+	//6.35MHz max SSIClk=5.7MHz  CPSDVSR=2  SCR=6
+	//SSI0->CPSR = 0x4;
+	SSI0->CR0 = 0x6C7; //SCR = 6, SPH = SPO = 1, DSS= 8 bits
 	SSI0->CR1 |= 0x2; //enable SSIO
 }
 

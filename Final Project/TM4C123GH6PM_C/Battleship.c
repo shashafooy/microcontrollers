@@ -28,6 +28,14 @@ BtnData shipSquare(int i, int j, squareInfo status) {
 }
 */
 
+/*******************************************************
+This function delays the game for 2 seconds so the user can see if their selection was a hit or miss
+*******************************************************/
+void delay(int sec) {
+	WTIMER0->TAILR = 0x98967ff; // (load+1)/80MHz= 2 secs
+	while(WTIMER0->TAV > 0); // Wait for timer to finish
+}
+
 void drawGrid(int lcdNum) {
 	int i,j;
 	BtnData grid;
