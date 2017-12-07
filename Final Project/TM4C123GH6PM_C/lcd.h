@@ -23,6 +23,10 @@
 //This function configures the LCD screen for using. 
 void lcd_init(void);
 
+void LCD_SetPage(unsigned short Start, unsigned short End, int lcdNum);
+void LCD_setColumn(unsigned short Start, unsigned short End, int lcdNum);
+
+
 //This function writes data to the LCD screen
 void write_dat(unsigned char data, int lcdNum);
 void write_dat2(unsigned short data, int lcdNum);

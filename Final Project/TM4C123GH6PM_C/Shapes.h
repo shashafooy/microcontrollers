@@ -16,8 +16,6 @@ typedef struct{
 }BtnData;
 
 BtnData BtnData_new(int xb, int xe, int yb, int ye, unsigned short color);
-void LCD_SetPage(unsigned short Start, unsigned short End, int lcdNum);
-void LCD_setColumn(unsigned short Start, unsigned short End, int lcdNum);
 
 void clear_lcd(unsigned short color, int lcdNum);
 //void draw_rectangle(int x_begin, int y_begin, int x_end, int y_end, unsigned short color);

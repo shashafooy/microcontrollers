@@ -1,6 +1,7 @@
 #ifndef BTLSHIP_H
 #define BTLSHIP_H
 #include "Shapes.h"
+#include "Font.h"
 
 #define XSIZE 6
 #define YSIZE 7

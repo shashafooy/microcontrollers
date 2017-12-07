@@ -5,7 +5,19 @@ void waitBusy(){
 	while(SSI0->SR >> 4 == 1); 
 }
 
+void LCD_SetPage(unsigned short Start, unsigned short End, int ledNum){
+	write_cmd(0x2B,ledNum);
+	write_dat2(Start,ledNum);
+	write_dat2(End,ledNum);
+	
+}
 
+
+void LCD_setColumn(unsigned short Start, unsigned short End, int ledNum){
+	write_cmd(0x2A,ledNum);
+	write_dat2(Start,ledNum);
+	write_dat2(End,ledNum);
+}
 //This function configures the LCD screen for using. 
 //
 //It assumes that there exist write_dat and write_cmd functions that function properly and that peripherals are configured and enabled. 

@@ -1,5 +1,4 @@
 #include "lcd.h"
-#include "Shapes.h"
 #include "Battleship.h"
 #include <stdbool.h>
 
@@ -150,14 +149,21 @@ int main(void)
 	initPorts();
 	initSSI();
 	lcd_init();
+	draw_rectangle(BtnData_new(0,240,0,4,white),0); //warm up the lcd
+	draw_rectangle(BtnData_new(0,240,0,4,white),1); //these functions are needed to "warm up?" the lcd
+
+
 	
-	draw_rectangle(BtnData_new(10, 100, 10, 100, cyan), 0);
-	draw_circle(BtnData_new(10, 100, 10, 100, red), 0);
-	//run();
+	//draw_circle(BtnData_new(30,50,120,140,red),0);
+	//DrawString("Start",30,100,0,6);
+	//DrawString("Restart",15,200,0,5);
+	
+	//draw_L(0);
+	//draw_W(1);
 	
 	//clear_lcd(black,0);
 	//initBtn();
-	//run();
+	run();
 	//This function tests the configuration of your GPIO port and your SSI/SPI module. 
 	//
 	//Pass it the following parameters in the following order
