@@ -9,8 +9,8 @@
 #define MAXTOUCH 500
 
 void toggleBtn( BtnData *btn);
-void initPorts(void);
-void initSSI(void);
+void init_Ports(void);
+void init_SSI(void);
 void computeTouch(unsigned int, unsigned int);
 
 BtnData btn1, btn2, btn3;
@@ -45,7 +45,7 @@ void init_WTimer(){
 	
 }
 
-void initPorts(void){
+void init_Ports(void){
 	
 	SYSCTL->RCGCSSI = 0x1; //RCGCSSI enable SSI0 clock
 	SYSCTL->RCGC2 |= RCGC2_PA | RCGC2_PB | RCGC2_PC;
@@ -112,7 +112,7 @@ void GPIOB_Handler(void){
 	GPIOB->IM |= 0xC; //endable pin 2,3
 }
 
-void initSSI(void){
+void init_SSI(void){
 	
 	SSI0->CR1 &= ~0x2; //disable SSIO, SSICR1 disable SSE bit (2nd)
 	SSI0->CR1 = 0x00000000; //master mode
@@ -128,59 +128,17 @@ void initSSI(void){
 
 int main(void)
 {
-	//values for configuration. Assign these to the values you chose for your peripherals.
-	//
-	//ssiModuleBaseAddress should be assigned to the base address of your SSI/SPI module. 
-	//cmdDataSelectGPIOBaseAddress should be assigned to the base address of the GPIO port you are using as your command/data Select. ***PB0***
-	//cmdDataSelectGPIOPinNumber should be assigned the the pin number (0-7) of the GPIO pin you are using as your command/data select pin. 
-	//
-//	unsigned int* ssiModuleBaseAddress             = (unsigned int*) 0x40008000;    //default value for ssi0
-//	unsigned char* cmdDataSelectGPIOBaseAddress    = (unsigned char*) 0x40005000;   //default value for GPIO Port B
-//	unsigned int cmdDataSelectGPIOPinNumber        = 0x0;                           //default value for PB_0
-	
-	
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//Call your initialization functions here
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	current = touchItems = p1xval = p1yval = p2xval = p2yval= 0;
 	
 	init_SysClk();
 	init_WTimer();
-	initPorts();
-	initSSI();
+	init_Ports();
+	init_SSI();
 	lcd_init();
 	draw_rectangle(BtnData_new(0,240,0,4,white),0); //warm up the lcd
 	draw_rectangle(BtnData_new(0,240,0,4,white),1); //these functions are needed to "warm up?" the lcd
 
-
-	
-	//draw_circle(BtnData_new(30,50,120,140,red),0);
-	//DrawString("Start",30,100,0,6);
-	//DrawString("Restart",15,200,0,5);
-	
-	//draw_L(0);
-	//draw_W(1);
-	
-	//clear_lcd(black,0);
-	//initBtn();
 	run();
-	//This function tests the configuration of your GPIO port and your SSI/SPI module. 
-	//
-	//Pass it the following parameters in the following order
-	//	The pin number (0-7) of the gpio port you are using. Pass as an unsigned integer.
-	//	The base address for the gpio port you are using. Pass as an unsigned character pointer
-	//	The base address for the SSI/SPI module you are using. Pass as an unsigned integer pointer. 
-	//test_configuration(cmdDataSelectGPIOPinNumber, cmdDataSelectGPIOBaseAddress, ssiModuleBaseAddress);
-	
-	
 
-	
-	
-	
-	//After you have made sure that your ssi configuration and your gpio configuration are correct, 
-	// you can delete the call to test_configuration and write your own code to draw the buttons. 
-	// It is recommended that you write your LCD screen interfacing code in lcd.c and provide 
-	// corresponding function declarations in lcd.h. That will allow you to copy your lcd.c and lcd.h 
-	// files into any other project that requires the LCD screen. 
 	while(1);
 }
