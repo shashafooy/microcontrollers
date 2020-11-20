@@ -424,7 +424,9 @@ returns false if a ship was not created.
 bool tryCreateShip(int tempx, int tempy, int shipLength, int player, xycoor selection){
 	int i;
 	shipLength--;
+	if(p1Ships[tempx][tempy].type==ship) return false;
 	if(selection.x ==tempx && selection.y == tempy-(shipLength)){ //vertical
+		if(p1Ships[tempx][tempy-1].type==ship) return false;
 		for(i=tempy-shipLength; i<=tempy; i++){
 			orientation dir;
 			if(i==tempy-shipLength) dir = down;
@@ -436,6 +438,7 @@ bool tryCreateShip(int tempx, int tempy, int shipLength, int player, xycoor sele
 		return true;
 	}
 	else if(selection.x ==tempx && selection.y == tempy+(shipLength)&& tempy+(shipLength)< 7){ //vertical
+		if(p1Ships[tempx][tempy+1].type==ship) return false;
 		for(i=tempy; i<=tempy+shipLength; i++){
 			orientation dir;
 			if(i==tempy+shipLength) dir = up;
@@ -447,6 +450,7 @@ bool tryCreateShip(int tempx, int tempy, int shipLength, int player, xycoor sele
 		return true;	
 	}
 	else if(selection.x ==tempx-(shipLength) && selection.y == tempy){ //horizontal
+		if(p1Ships[tempx-1][tempy].type==ship) return false;
 		for(i=tempx-shipLength; i<=tempx; i++){
 			orientation dir;
 			if(i==tempx-shipLength) dir = right;
@@ -458,6 +462,7 @@ bool tryCreateShip(int tempx, int tempy, int shipLength, int player, xycoor sele
 		return true;	
 	}
 	else if(selection.x ==tempx+(shipLength)&& selection.y == tempy&& tempx+(shipLength) < 6){ //horizontal
+		if(p1Ships[tempx+1][tempy].type==ship) return false;
 		for(i=tempx; i<=tempx+shipLength; i++){
 			orientation dir;
 			if(i==tempx+shipLength) dir = left;
